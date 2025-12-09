@@ -60,7 +60,11 @@
     <div class="card bg-base-200">
       <div class="card-body">
         <div class="diff-display font-mono text-sm">
-          <%= raw Diffy::Diff.new(@statement.parent.content, @statement.content, include_plus_and_minus_in_html: true).to_s(:html) %>
+          <%= raw Diffy::Diff.new(
+            ERB::Util.html_escape(@statement.parent.content),
+            ERB::Util.html_escape(@statement.content),
+            include_plus_and_minus_in_html: true
+          ).to_s(:html) %>
         </div>
       </div>
     </div>
