@@ -30,12 +30,12 @@ class ActionDispatch::IntegrationTest
   end
 
   # Override the get/post/etc methods to inject the test session
-  [:get, :post, :patch, :put, :delete].each do |method|
+  [ :get, :post, :patch, :put, :delete ].each do |method|
     define_method(:"#{method}_with_test_session") do |path, **args|
       if defined?(@test_session_id) && @test_session_id
         # Inject session data through headers that our authenticate method can read
         args[:headers] ||= {}
-        args[:headers]['X-Test-Session-ID'] = @test_session_id.to_s
+        args[:headers]["X-Test-Session-ID"] = @test_session_id.to_s
       end
       send(:"#{method}_without_test_session", path, **args)
     end

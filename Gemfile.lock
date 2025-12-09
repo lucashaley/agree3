@@ -118,6 +118,7 @@ GEM
     debug (1.11.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    diffy (3.4.4)
     dotenv (3.2.0)
     drb (2.2.3)
     ed25519 (1.4.0)
@@ -428,6 +429,7 @@ DEPENDENCIES
   capybara
   closure_tree
   debug
+  diffy
   enumerate_it
   image_processing (~> 1.2)
   importmap-rails

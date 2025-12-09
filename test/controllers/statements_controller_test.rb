@@ -157,7 +157,7 @@ class StatementsControllerTest < ActionDispatch::IntegrationTest
     post agree_statement_url(child)
     assert_redirected_to statement_url(child)
     assert flash[:ancestor_warning].present?
-    assert_equal ["parent statement"], flash[:ancestor_warning]['ancestor_contents']
+    assert_equal [ "parent statement" ], flash[:ancestor_warning]["ancestor_contents"]
 
     # User should still have parent vote, not child vote
     assert @user.voted_for?(parent)
@@ -173,7 +173,7 @@ class StatementsControllerTest < ActionDispatch::IntegrationTest
     assert @user.voted_for?(parent)
 
     # Vote for child with confirmation - should remove parent vote
-    post agree_statement_url(child), params: { confirm_ancestor_removal: 'true' }
+    post agree_statement_url(child), params: { confirm_ancestor_removal: "true" }
     assert_redirected_to statement_url(child)
 
     # User should now have child vote, not parent vote
@@ -191,7 +191,7 @@ class StatementsControllerTest < ActionDispatch::IntegrationTest
     parent.vote_by voter: @user
 
     # Try to vote for child with confirmation
-    post agree_statement_url(child), params: { confirm_ancestor_removal: 'true' }
+    post agree_statement_url(child), params: { confirm_ancestor_removal: "true" }
 
     # All ancestor votes should be removed, child should be voted
     assert_not @user.voted_for?(grandparent)

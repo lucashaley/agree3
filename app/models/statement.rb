@@ -1,9 +1,9 @@
 class Statement < ApplicationRecord
-  acts_as_tree order: 'created_at'
+  acts_as_tree order: "created_at"
   has_closure_tree
   acts_as_votable
 
-  belongs_to :author, class_name: 'User'
+  belongs_to :author, class_name: "User"
 
   validates :content, presence: true
 
@@ -25,11 +25,11 @@ class Statement < ApplicationRecord
 
   # Get all descendants recursively
   def all_descendants
-    children.flat_map { |child| [child] + child.all_descendants }
+    children.flat_map { |child| [ child ] + child.all_descendants }
   end
 
   normalizes :content, with: -> do
-    text = _1.sub(/\.\z/, '') # Remove trailing period
+    text = _1.sub(/\.\z/, "") # Remove trailing period
 
     # Lowercase first letter unless it's a proper noun
     words = text.split(/\s+/)
@@ -53,7 +53,7 @@ class Statement < ApplicationRecord
       unless (first_word.length > 1 && first_word == first_word.upcase) || proper_nouns.include?(first_word)
         first_word = first_word[0].downcase + first_word[1..-1] if first_word.length > 0
         words[0] = first_word
-        text = words.join(' ')
+        text = words.join(" ")
       end
     end
 

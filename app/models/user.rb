@@ -13,7 +13,7 @@ class User < ApplicationRecord
 
   has_many :sessions, dependent: :destroy
   has_many :sign_in_tokens, dependent: :destroy
-  has_many :statements, foreign_key: 'author_id', dependent: :destroy
+  has_many :statements, foreign_key: "author_id", dependent: :destroy
 
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }

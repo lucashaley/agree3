@@ -53,6 +53,47 @@
       </div>
     </div>
   </div>
+
+  <!-- Show diff between current and parent statement -->
+  <div class="my-8">
+    <h2 class="text-2xl font-bold mb-4">Changes from Parent</h2>
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <div class="diff-display font-mono text-sm">
+          <%= raw Diffy::Diff.new(@statement.parent.content, @statement.content, include_plus_and_minus_in_html: true).to_s(:html) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .diff-display .diff ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .diff-display .diff li {
+      padding: 2px 4px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .diff-display .diff ins {
+      background-color: #d4edda;
+      color: #155724;
+      text-decoration: none;
+    }
+    .diff-display .diff del {
+      background-color: #f8d7da;
+      color: #721c24;
+      text-decoration: none;
+    }
+    .diff-display .diff li.ins {
+      background-color: #d4edda;
+    }
+    .diff-display .diff li.del {
+      background-color: #f8d7da;
+    }
+  </style>
 <% end %>
 
 <% if @statement.children.any? %>
@@ -138,11 +179,16 @@
   <button class="btn btn-secondary" onclick="variant_modal.showModal()">Create Variant</button>
 </div>
 
-<div>
-  <%= link_to "Edit this statement", edit_statement_path(@statement) %> |
-  <%= link_to "Back to statements", statements_path %>
+<div class="space-y-4">
+  <div>
+    <%= link_to "Edit this statement", edit_statement_path(@statement) %> |
+    <%= link_to "Back to statements", statements_path %> |
+    <%= link_to "View SVG", svg_statement_path(@statement), target: "_blank", class: "link link-primary" %>
+  </div>
 
-  <%= button_to "Destroy this statement", @statement, method: :delete, class: 'btn btn-primary' %>
+  <div>
+    <%= button_to "Destroy this statement", @statement, method: :delete, class: 'btn btn-primary' %>
+  </div>
 </div>
 
 <!-- Modal for creating a variant -->

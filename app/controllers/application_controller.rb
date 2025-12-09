@@ -8,8 +8,8 @@ class ApplicationController < ActionController::Base
   private
     def authenticate
       # Allow tests to set session via test_session_id header
-      if Rails.env.test? && request.headers['X-Test-Session-ID'].present?
-        session_id = request.headers['X-Test-Session-ID']
+      if Rails.env.test? && request.headers["X-Test-Session-ID"].present?
+        session_id = request.headers["X-Test-Session-ID"]
       else
         session_id = cookies.signed[:session_token]
       end

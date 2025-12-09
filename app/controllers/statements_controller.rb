@@ -1,5 +1,5 @@
 class StatementsController < ApplicationController
-  before_action :set_statement, only: %i[ show edit update destroy agree create_variant ]
+  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg ]
 
   # GET /statements or /statements.json
   def index
@@ -80,12 +80,12 @@ class StatementsController < ApplicationController
       voted_ancestors = @statement.all_ancestors.select { |ancestor| Current.user.voted_for?(ancestor) }
       Rails.logger.info "Voted ancestors: #{voted_ancestors.map(&:id).inspect}"
 
-      if voted_ancestors.any? && params[:confirm_ancestor_removal] != 'true'
+      if voted_ancestors.any? && params[:confirm_ancestor_removal] != "true"
         # Store ancestor info in flash and redirect back for confirmation
         Rails.logger.info "Showing warning modal"
         flash[:ancestor_warning] = {
-          'statement_id' => @statement.id,
-          'ancestor_contents' => voted_ancestors.map(&:content)
+          "statement_id" => @statement.id,
+          "ancestor_contents" => voted_ancestors.map(&:content)
         }
         redirect_to @statement
       else
@@ -119,6 +119,56 @@ class StatementsController < ApplicationController
     end
   end
 
+  # GET /statements/1/svg
+  def svg
+    # Set SVG dimensions
+    size = 512
+    padding = 40
+
+    # Prepare text
+    header = "we agree that..."
+    content = @statement.content
+    content += "." unless content.end_with?(".", "!", "?")
+
+    # Calculate header dimensions
+    header_size = 24
+    header_line_height = header_size * 1.2
+    header_total_height = header_line_height + 20 # header + spacing
+
+    # Calculate available space for content
+    available_width = size - (padding * 2)
+    available_height = size - (padding * 2) - header_total_height
+
+    # Calculate optimal font size that fills the space
+    content_size = calculate_optimal_font_size(content, available_width, available_height)
+
+    # Generate SVG
+    svg_content = <<~SVG
+      <?xml version="1.0" encoding="UTF-8"?>
+      <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="#{size}" height="#{size}" fill="#f8f9fa"/>
+        <text x="#{padding}" y="#{padding + header_size}"
+              font-family="'Jost', sans-serif"
+              font-size="#{header_size}"
+              font-weight="600"
+              fill="#111827"
+              text-anchor="left">
+          #{header}
+        </text>
+        <text x="#{padding}" y="#{padding + header_total_height + content_size}"
+              font-family="'Jost', sans-serif"
+              font-size="#{content_size}"
+              font-weight="600"
+              fill="#111827"
+              text-anchor="left">
+          #{wrap_text(content, available_width, content_size)}
+        </text>
+      </svg>
+    SVG
+
+    render xml: svg_content, content_type: "image/svg+xml"
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_statement
@@ -128,5 +178,64 @@ class StatementsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def statement_params
       params.expect(statement: [ :content ])
+    end
+
+    # Calculate optimal font size to fill available space
+    def calculate_optimal_font_size(text, max_width, max_height)
+      # Start with a reasonable range
+      min_size = 16
+      max_size = 120
+      optimal_size = min_size
+
+      # Test sizes from large to small to find the biggest that fits
+      max_size.downto(min_size) do |font_size|
+        lines = wrap_text_to_lines(text, max_width, font_size)
+        line_height = font_size * 1.2
+        total_height = lines.length * line_height
+
+        # If this size fits, it's our optimal size
+        if total_height <= max_height
+          optimal_size = font_size
+          break
+        end
+      end
+
+      optimal_size
+    end
+
+    # Wrap text into lines based on available width and font size
+    def wrap_text_to_lines(text, max_width, font_size)
+      words = text.split(" ")
+      lines = []
+      current_line = []
+
+      # Character width estimate (adjust based on your font)
+      # Jost font is roughly 0.6 * font_size per character on average
+      char_width = font_size * 0.6
+
+      words.each do |word|
+        test_line = (current_line + [ word ]).join(" ")
+        line_width = test_line.length * char_width
+
+        if line_width > max_width && current_line.any?
+          lines << current_line.join(" ")
+          current_line = [ word ]
+        else
+          current_line << word
+        end
+      end
+      lines << current_line.join(" ") if current_line.any?
+
+      lines
+    end
+
+    # Helper to wrap text into multiple lines for SVG with tspan elements
+    def wrap_text(text, max_width, font_size)
+      lines = wrap_text_to_lines(text, max_width, font_size)
+
+      # Generate tspan elements for each line
+      lines.map.with_index do |line, i|
+        %(<tspan x="40" dy="#{i == 0 ? 0 : font_size * 1.2}">#{line}</tspan>)
+      end.join("\n          ")
     end
 end

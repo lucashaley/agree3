@@ -6,11 +6,11 @@ class CreateStatementHierarchies < ActiveRecord::Migration[8.1]
       t.integer :generations, null: false
     end
 
-    add_index :statement_hierarchies, [:ancestor_id, :descendant_id, :generations],
+    add_index :statement_hierarchies, [ :ancestor_id, :descendant_id, :generations ],
       unique: true,
       name: "statement_anc_desc_idx"
 
-    add_index :statement_hierarchies, [:descendant_id],
+    add_index :statement_hierarchies, [ :descendant_id ],
       name: "statement_desc_idx"
   end
 end

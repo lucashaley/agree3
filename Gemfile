@@ -41,17 +41,19 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # Authentication Zero for Rails 8 passwordless authentication
-gem 'authentication-zero'
+gem "authentication-zero"
 # https://github.com/mbleigh/acts-as-taggable-on
-gem 'acts-as-taggable-on', '~> 13.0' # Updated for Rails 8 support
+gem "acts-as-taggable-on", "~> 13.0" # Updated for Rails 8 support
 # https://github.com/ryanto/acts_as_votable
-gem 'acts_as_votable', '~> 0.14.0'
+gem "acts_as_votable", "~> 0.14.0"
 # https://github.com/lucascaton/enumerate_it
-gem 'enumerate_it'
+gem "enumerate_it"
 # https://github.com/ClosureTree/closure_tree
-gem 'closure_tree'
+gem "closure_tree"
 # https://daisyui.com/docs/install/rails/
-gem 'tailwindcss-rails'
+gem "tailwindcss-rails"
+# https://github.com/samg/diffy
+gem "diffy"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -69,7 +71,7 @@ group :development, :test do
   # https://github.com/sickill/rainbow
   gem "rainbow"
   # https://github.com/ryanb/letter_opener
-  gem 'letter_opener'
+  gem "letter_opener"
 end
 
 group :development do
