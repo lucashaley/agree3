@@ -1,0 +1,32 @@
+<% content_for :title, "Contact" %>
+
+<div class="max-w-2xl">
+  <h1 class="text-4xl font-bold mb-6">Contact</h1>
+
+  <% if flash[:alert] %>
+    <div class="alert alert-error mb-4">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <%= form_with url: contact_path, method: :post, class: "space-y-4" do |form| %>
+    <div class="form-control">
+      <%= label_tag :name, "Name", class: "label" %>
+      <%= text_field_tag :name, params[:name], class: "input input-bordered w-full", required: true %>
+    </div>
+
+    <div class="form-control">
+      <%= label_tag :email, "Email", class: "label" %>
+      <%= email_field_tag :email, params[:email], class: "input input-bordered w-full", required: true %>
+    </div>
+
+    <div class="form-control">
+      <%= label_tag :message, "Message", class: "label" %>
+      <%= text_area_tag :message, params[:message], class: "textarea textarea-bordered w-full h-32", required: true %>
+    </div>
+
+    <div>
+      <%= submit_tag "Send Message", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

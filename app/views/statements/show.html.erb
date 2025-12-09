@@ -1,0 +1,168 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render partial: "statement_full", locals: { statement: @statement } %>
+<%# render @statement %>
+
+<!-- Show if user has voted for related statements -->
+<%
+  voted_ancestors = @statement.all_ancestors.select { |ancestor| Current.user.voted_for?(ancestor) }
+  voted_descendants = @statement.all_descendants.select { |descendant| Current.user.voted_for?(descendant) }
+%>
+
+<% if voted_ancestors.any? || voted_descendants.any? %>
+  <div class="alert alert-info my-4">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div class="flex-1">
+      <% if voted_ancestors.any? %>
+        <div class="mb-2">
+          <strong>You have already voted for <%= voted_ancestors.size == 1 ? 'a parent statement' : 'parent statements' %>:</strong>
+          <ul class="list-disc ml-6 mt-2">
+            <% voted_ancestors.each do |ancestor| %>
+              <li>
+                <%= link_to ancestor.content, statement_path(ancestor), class: "link link-hover" %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if voted_descendants.any? %>
+        <div>
+          <strong>You have already voted for <%= voted_descendants.size == 1 ? 'a variant' : 'variants' %> of this statement:</strong>
+          <ul class="list-disc ml-6 mt-2">
+            <% voted_descendants.each do |descendant| %>
+              <li>
+                <%= link_to descendant.content, statement_path(descendant), class: "link link-hover" %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @statement.parent.present? %>
+  <div class="my-8">
+    <h2 class="text-2xl font-bold mb-4">Parent Statement</h2>
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <%= link_to statement_path(@statement.parent), class: "text-lg" do %>
+          <%= @statement.parent.content %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @statement.children.any? %>
+  <div class="my-8">
+    <h2 class="text-2xl font-bold mb-4">Variants (<%= @statement.descendant_count %>)</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="w-16">Rank</th>
+            <th>Statement</th>
+            <th class="w-24 text-center">Votes</th>
+            <th class="w-24"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @statement.all_descendants.sort_by { |s| s.get_upvotes.size }.reverse.each_with_index do |descendant, index| %>
+            <tr>
+              <td class="font-bold text-center"><%= index + 1 %></td>
+              <td>
+                <%= link_to descendant.content, statement_path(descendant), class: "link link-hover" %>
+                <% if descendant.parent_id != @statement.id %>
+                  <span class="badge badge-xs badge-ghost ml-2">nested</span>
+                <% end %>
+              </td>
+              <td class="text-center font-semibold"><%= descendant.get_upvotes.size %></td>
+              <td>
+                <%= link_to "View", statement_path(descendant), class: "btn btn-sm btn-ghost" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<div>
+  <%= button_to Current.user.voted_for?(@statement) ? "Unagree" : "Agree",
+      agree_statement_path(@statement),
+      method: :post,
+      class: 'btn btn-primary',
+      id: 'agree-button',
+      data: { turbo: false } %>
+</div>
+
+<% if flash[:ancestor_warning] && flash[:ancestor_warning]['ancestor_contents'] %>
+  <!-- Ancestor Vote Warning Modal -->
+  <dialog id="ancestor_warning_modal" class="modal">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold mb-4">Ancestor Vote Warning</h3>
+      <p class="mb-4">You have already agreed with a parent statement of this one:</p>
+      <ul class="list-disc ml-6 mb-4">
+        <% flash[:ancestor_warning]['ancestor_contents'].each do |content| %>
+          <li class="italic"><%= content %></li>
+        <% end %>
+      </ul>
+      <p class="mb-4">By agreeing with this statement, your vote on the parent statement(s) will be removed.</p>
+      <div class="modal-action">
+        <%= button_to "Continue and Remove Parent Vote",
+            agree_statement_path(@statement),
+            method: :post,
+            params: { confirm_ancestor_removal: 'true' },
+            class: "btn btn-primary",
+            data: { turbo: false } %>
+        <button type="button" class="btn" onclick="ancestor_warning_modal.close()">Cancel</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+
+  <script>
+    // Show the modal when the page loads if there's an ancestor warning
+    document.addEventListener('DOMContentLoaded', function() {
+      ancestor_warning_modal.showModal();
+    });
+  </script>
+<% end %>
+
+<div class="my-4">
+  <button class="btn btn-secondary" onclick="variant_modal.showModal()">Create Variant</button>
+</div>
+
+<div>
+  <%= link_to "Edit this statement", edit_statement_path(@statement) %> |
+  <%= link_to "Back to statements", statements_path %>
+
+  <%= button_to "Destroy this statement", @statement, method: :delete, class: 'btn btn-primary' %>
+</div>
+
+<!-- Modal for creating a variant -->
+<dialog id="variant_modal" class="modal">
+  <div class="modal-box">
+    <h3 class="text-lg font-bold mb-4">Create a Variant</h3>
+
+    <%= form_with url: create_variant_statement_path(@statement), method: :post, scope: :statement do |form| %>
+      <div class="form-control">
+        <%= form.label :content, "Statement Content", class: "label" %>
+        <%= form.text_area :content, value: @statement.content, class: "textarea textarea-bordered w-full h-32", required: true %>
+      </div>
+
+      <div class="modal-action">
+        <%= form.submit "Create Variant", class: "btn btn-primary" %>
+        <button type="button" class="btn" onclick="variant_modal.close()">Cancel</button>
+      </div>
+    <% end %>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

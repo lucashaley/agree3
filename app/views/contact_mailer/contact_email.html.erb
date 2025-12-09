@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <h1>Contact Form Message</h1>
+
+    <p><strong>From:</strong> <%= @name %> (<%= @email %>)</p>
+
+    <p><strong>Message:</strong></p>
+    <p><%= simple_format(@message) %></p>
+  </body>
+</html>
