@@ -1,5 +1,5 @@
 class StatementsController < ApplicationController
-  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg ]
+  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg flag unflag ]
 
   # GET /statements or /statements.json
   def index
@@ -10,6 +10,15 @@ class StatementsController < ApplicationController
     @top_by_variants = Statement.all.select { |s| s.children.any? }.sort_by { |s| s.descendant_count }.reverse.take(10)
     # Get 10 most recent statements
     @recent_statements = Statement.order(created_at: :desc).limit(10)
+  end
+
+  # GET /statements/search
+  def search
+    if params[:q].present?
+      @statements = Statement.search_by_content(params[:q])
+    else
+      @statements = []
+    end
   end
 
   # GET /statements/1 or /statements/1.json
@@ -119,6 +128,45 @@ class StatementsController < ApplicationController
     end
   end
 
+  # POST /statements/1/flag
+  def flag
+    flag_type = params[:flag_type]
+
+    if Statement::FLAG_TYPES.include?(flag_type)
+      # Check if user hasn't already flagged with this type
+      tag = ActsAsTaggableOn::Tag.find_or_create_by(name: flag_type)
+      unless @statement.taggings.exists?(tag: tag, tagger: Current.user, context: :flags)
+        @statement.taggings.create!(
+          tag: tag,
+          tagger: Current.user,
+          context: :flags
+        )
+      end
+      redirect_to @statement, notice: "Statement flagged as #{flag_type}."
+    else
+      redirect_to @statement, alert: "Invalid flag type."
+    end
+  end
+
+  # DELETE /statements/1/unflag
+  def unflag
+    flag_type = params[:flag_type]
+
+    # Remove only the current user's flag of this type
+    tagging = @statement.taggings.where(
+      tag: ActsAsTaggableOn::Tag.find_by(name: flag_type),
+      tagger: Current.user,
+      context: :flags
+    ).first
+
+    if tagging
+      tagging.destroy
+      redirect_to @statement, notice: "Flag removed."
+    else
+      redirect_to @statement, alert: "Flag not found."
+    end
+  end
+
   # GET /statements/1/svg
   def svg
     # Set SVG dimensions
@@ -142,16 +190,32 @@ class StatementsController < ApplicationController
     # Calculate optimal font size that fills the space
     content_size = calculate_optimal_font_size(content, available_width, available_height)
 
+    # Determine color scheme based on mode parameter
+    mode = params[:mode] == "dark" ? "dark" : "light"
+    colors = if mode == "dark"
+      {
+        background: "#111827",
+        text: "#f9fafb",
+        header: "#9ca3af"
+      }
+    else
+      {
+        background: "#f8f9fa",
+        text: "#111827",
+        header: "#6b7280"
+      }
+    end
+
     # Generate SVG
     svg_content = <<~SVG
       <?xml version="1.0" encoding="UTF-8"?>
       <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="#{size}" height="#{size}" fill="#f8f9fa"/>
+        <rect width="#{size}" height="#{size}" fill="#{colors[:background]}"/>
         <text x="#{padding}" y="#{padding + header_size}"
               font-family="'Jost', sans-serif"
               font-size="#{header_size}"
               font-weight="600"
-              fill="#111827"
+              fill="#{colors[:header]}"
               text-anchor="left">
           #{header}
         </text>
@@ -159,7 +223,7 @@ class StatementsController < ApplicationController
               font-family="'Jost', sans-serif"
               font-size="#{content_size}"
               font-weight="600"
-              fill="#111827"
+              fill="#{colors[:text]}"
               text-anchor="left">
           #{wrap_text(content, available_width, content_size)}
         </text>

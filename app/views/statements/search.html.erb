@@ -1,0 +1,60 @@
+<div class="mb-8">
+  <h1 class="text-4xl font-bold mb-4">Search Results</h1>
+  <% if params[:q].present? %>
+    <p class="text-lg mb-4">
+      Showing results for: <strong class="text-primary"><%= params[:q] %></strong>
+    </p>
+  <% end %>
+</div>
+
+<% if @statements.any? %>
+  <div class="space-y-4">
+    <% @statements.each do |statement| %>
+      <div class="card bg-base-200">
+        <div class="card-body">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <%= link_to statement_path(statement), class: "text-lg hover:text-primary" do %>
+                <%= statement.content %>
+              <% end %>
+            </div>
+            <div class="flex flex-col items-end gap-2 ml-4">
+              <div class="badge badge-primary">
+                <%= pluralize(statement.get_upvotes.size, "vote") %>
+              </div>
+              <% if statement.children.any? %>
+                <div class="badge badge-ghost">
+                  <%= pluralize(statement.descendant_count, "variant") %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-8">
+    <p class="text-sm text-base-content/70">
+      Found <%= pluralize(@statements.count, "result") %>
+    </p>
+  </div>
+<% elsif params[:q].present? %>
+  <div class="alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>No statements found matching "<%= params[:q] %>". Try a different search term.</span>
+  </div>
+<% else %>
+  <div class="alert alert-warning">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+    </svg>
+    <span>Please enter a search term.</span>
+  </div>
+<% end %>
+
+<div class="mt-8">
+  <%= link_to "Back to statements", statements_path, class: "btn btn-ghost" %>
+</div>

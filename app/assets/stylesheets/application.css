@@ -8,3 +8,24 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "navbar"
+    "main"
+    "footer";
+}
+
+navbar {
+  grid-area: navbar;
+}
+
+main {
+  grid-area: main;
+}
+
+footer {
+  grid-area: footer;
+}

@@ -54,6 +54,10 @@ gem "closure_tree"
 gem "tailwindcss-rails"
 # https://github.com/samg/diffy
 gem "diffy"
+# https://github.com/jcypret/hashid-rails
+gem "hashid-rails"
+# https://github.com/Casecommons/pg_search
+gem "pg_search"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

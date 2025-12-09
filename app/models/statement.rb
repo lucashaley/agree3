@@ -1,11 +1,44 @@
 class Statement < ApplicationRecord
+  include Hashid::Rails
+  include PgSearch::Model
+
+  pg_search_scope :search_by_content,
+    against: :content,
+    using: {
+      tsearch: { prefix: true, any_word: true },
+      trigram: { threshold: 0.1, word_similarity: true }
+    },
+    ranked_by: ":trigram + :tsearch"
+
+  acts_as_taggable_on :flags
   acts_as_tree order: "created_at"
   has_closure_tree
   acts_as_votable
 
   belongs_to :author, class_name: "User"
 
+  # Valid flag types
+  FLAG_TYPES = ["Ad Hominem", "Nonsensical", "Inappropriate"].freeze
+
   validates :content, presence: true
+
+  # Get count of each flag type
+  def flag_counts
+    FLAG_TYPES.each_with_object({}) do |flag_type, counts|
+      counts[flag_type] = taggings.joins(:tag)
+        .where(context: :flags, tags: { name: flag_type })
+        .count
+    end
+  end
+
+  # Check if current user has flagged with a specific type
+  def flagged_by_user?(user, flag_type)
+    taggings.exists?(
+      tag: ActsAsTaggableOn::Tag.find_by(name: flag_type),
+      tagger: user,
+      context: :flags
+    )
+  end
 
   # Get all ancestors by walking up the parent chain
   def all_ancestors

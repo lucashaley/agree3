@@ -33,9 +33,14 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :statements do
+    collection do
+      get :search
+    end
     member do
       post :agree
       post :create_variant
+      post :flag
+      delete :unflag
       get :svg
     end
   end

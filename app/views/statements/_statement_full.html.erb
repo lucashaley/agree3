@@ -2,7 +2,26 @@
   <div class="card-body">
     <statement>
       <preface class="sm: text-2xl md:text-3xl lg:text-5xl font-semibold">
-        We agree that...
+        <%
+          vote_count = statement.get_upvotes.size
+          user_voted = Current.user.voted_for?(statement)
+
+          if user_voted && vote_count == 1
+            preface_text = "You agree that..."
+          elsif user_voted && vote_count > 1
+            other_count = vote_count - 1
+            formatted_count = number_with_delimiter(other_count)
+            preface_text = "You and #{formatted_count} other #{other_count == 1 ? 'person' : 'people'} agree that..."
+          elsif vote_count == 1
+            preface_text = "1 person agrees that..."
+          elsif vote_count > 1
+            formatted_count = number_with_delimiter(vote_count)
+            preface_text = "#{formatted_count} people agree that..."
+          else
+            preface_text = "We agree that..."
+          end
+        %>
+        <%= preface_text %>
       </preface>
       <br />
       <content class="sm: text-3xl md:text-5xl lg:text-7xl font-black leading-20">

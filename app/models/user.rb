@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
   acts_as_voter
+  acts_as_tagger
 
   generates_token_for :email_verification, expires_in: 2.days do
     email

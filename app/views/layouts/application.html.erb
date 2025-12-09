@@ -23,8 +23,9 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <div class="navbar bg-base-100 shadow-sm">
+  <body class="min-h-screen grid grid-rows-[auto_1fr_auto] grid-cols-1">
+    <!-- Navbar Row -->
+    <navbar class="navbar bg-base-100 shadow-sm">
       <div class="navbar-start">
         <div class="dropdown">
           <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
@@ -34,18 +35,19 @@
             tabindex="-1"
             class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
             <li><%= link_to "Homepage", :root %></li>
+            <li><%= link_to "Statements", statements_path %></li>
             <li><%= link_to "About", about_path %></li>
             <li><%= link_to "Contact", contact_form_path %></li>
           </ul>
         </div>
       </div>
       <div class="navbar-center">
-        <%= link_to "we agree that...", :root, class: "btn btn-ghost text-xlbtn btn-ghost text-xl" %>
+        <%= link_to "we agree that...", :root, class: "btn btn-ghost text-xl" %>
       </div>
       <div class="navbar-end">
-        <button class="btn btn-ghost btn-circle">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /> </svg>
-        </button>
+        <%= form_with url: search_statements_path, method: :get, class: "flex gap-2" do |f| %>
+          <%= f.text_field :q, placeholder: "Search", class: "input input-bordered w-24 md:w-auto", value: params[:q] %>
+        <% end %>
         <button class="btn btn-ghost btn-circle">
           <div class="indicator">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /> </svg>
@@ -53,17 +55,19 @@
           </div>
         </button>
       </div>
-    </div>
-    <main class="container mx-auto mt-28 px-5 flex">
+    </navbar>
 
+    <!-- Main Content Row -->
+    <main class="container mx-auto px-5 py-8">
       <%= yield %>
-
     </main>
-    <footer class="footer sm:footer-horizontal text-neutral-content items-center p-4">
-      <aside class="grid-flow-col items-center">
+
+    <!-- Footer Row -->
+    <footer class="footer bg-neutral text-neutral-content items-center py-2 px-4">
+      <aside class="grid-flow-col items-center gap-2">
         <svg
-          width="36"
-          height="36"
+          width="24"
+          height="24"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
           fill-rule="evenodd"
@@ -71,14 +75,14 @@
           class="fill-current">
           <text x="12" y="12" font-family="Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="white">wat</text>
         </svg>
-        <p>Copyright © 2025 - All right reserved</p>
+        <p class="text-sm">Copyright © 2025 - All right reserved</p>
       </aside>
-      <nav class="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
+      <nav class="grid-flow-col gap-3 md:place-self-center md:justify-self-end">
         <a>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             class="fill-current">
             <path
