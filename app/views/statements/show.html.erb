@@ -136,10 +136,11 @@
 <% end %>
 
 <div class="flex gap-4 items-center my-4">
-  <%= button_to Current.user.voted_for?(@statement) ? "Unagree" : "Agree",
+  <% user_voted = Current.user.voted_for?(@statement) %>
+  <%= button_to user_voted ? "Unagree" : "Agree",
       agree_statement_path(@statement),
       method: :post,
-      class: 'btn btn-primary',
+      class: "btn #{user_voted ? 'btn-warning' : 'btn-success'} btn-lg text-2xl px-12 py-6 h-auto min-h-0",
       id: 'agree-button',
       data: { turbo: false } %>
 

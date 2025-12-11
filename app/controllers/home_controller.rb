@@ -1,5 +1,6 @@
 class HomeController < ApplicationController
   def index
-    @random_statement = Statement.order("RANDOM()").first
+    # Load 10 random statements for the carousel
+    @statements = Statement.order("RANDOM()").limit(10)
   end
 end

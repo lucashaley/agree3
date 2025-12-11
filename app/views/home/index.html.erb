@@ -1,9 +1,31 @@
 <p style="color: green"><%= notice %></p>
 
-<% if @random_statement %>
-  <div>
-    <%= render partial: 'statements/statement_full', locals: { statement: @random_statement } %>
+<% if @statements.any? %>
+  <div data-controller="statement-carousel" class="relative">
+    <% @statements.each_with_index do |statement, index| %>
+      <div data-statement-carousel-target="slide"
+           class="statement-slide <%= 'active' if index == 0 %>"
+           style="<%= 'display: none;' unless index == 0 %>">
+        <%= render partial: 'statements/statement_full', locals: { statement: statement } %>
+      </div>
+    <% end %>
   </div>
+
+  <style>
+    .statement-slide {
+      transition: opacity 1s ease-in-out;
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+
+    .statement-slide.active {
+      opacity: 1;
+      position: relative;
+    }
+  </style>
 <% end %>
 
 <!-- This should move into a dropdown menu
