@@ -1,0 +1,39 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "24b7c5c9ba8901e09623ea3c459a4afb9156d60a00c422a41375f14c0b84d06e",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/statements/show.html.erb",
+      "line": 64,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "Diffy::Diff.new(ERB::Util.html_escape(Statement.new(statement_params).parent.content), ERB::Util.html_escape(Statement.new(statement_params).content), :include_plus_and_minus_in_html => true).to_s(:html)",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "StatementsController",
+          "method": "create",
+          "line": 45,
+          "file": "app/controllers/statements_controller.rb",
+          "rendered": {
+            "name": "statements/show",
+            "file": "app/views/statements/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "statements/show"
+      },
+      "user_input": "Statement.new(statement_params).parent",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": ""
+    }
+  ],
+  "brakeman_version": "7.1.1"
+}
