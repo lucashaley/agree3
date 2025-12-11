@@ -8,8 +8,8 @@ class StatementsControllerTest < ActionDispatch::IntegrationTest
       password_confirmation: "password123456"
     )
 
-    # Sign in by creating a session and setting the cookie
-    sign_in_user(@user)
+    # Sign in by creating a session
+    sign_in_as(@user)
 
     @statement = Statement.create!(content: "test statement", author: @user)
   end
