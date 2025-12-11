@@ -18,7 +18,7 @@ class Statement < ApplicationRecord
   belongs_to :author, class_name: "User"
 
   # Valid flag types
-  FLAG_TYPES = ["Ad Hominem", "Nonsensical", "Inappropriate"].freeze
+  FLAG_TYPES = [ "Ad Hominem", "Nonsensical", "Inappropriate" ].freeze
 
   validates :content, presence: true
 
