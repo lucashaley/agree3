@@ -1,6 +1,4 @@
 class Sessions::PasswordlessesController < ApplicationController
-  skip_before_action :authenticate
-
   before_action :set_user, only: :edit
 
   def new
@@ -14,11 +12,21 @@ class Sessions::PasswordlessesController < ApplicationController
   end
 
   def create
-    if @user = User.find_by(email: params[:email], verified: true)
+    @user = User.find_by(email: params[:email])
+
+    if @user.nil?
+      # Create new user account
+      @user = User.create!(email: params[:email], verified: false)
+      send_email_verification
+      redirect_to sign_in_path, notice: "Account created! Check your email to verify and sign in"
+    elsif @user.verified?
+      # Existing verified user - send passwordless sign-in link
       send_passwordless_email
       redirect_to sign_in_path, notice: "Check your email for sign in instructions"
     else
-      redirect_to new_sessions_passwordless_path, alert: "You can't sign in until you verify your email"
+      # Existing unverified user - resend verification
+      send_email_verification
+      redirect_to sign_in_path, notice: "Check your email to verify your account"
     end
   end
 
@@ -31,6 +39,10 @@ class Sessions::PasswordlessesController < ApplicationController
 
     def send_passwordless_email
       UserMailer.with(user: @user).passwordless.deliver_later
+    end
+
+    def send_email_verification
+      UserMailer.with(user: @user).email_verification.deliver_later
     end
 
     def revoke_tokens

@@ -3,10 +3,11 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
   before_action :set_current_request_details
-  before_action :authenticate
+  before_action :set_current_session
 
   private
-    def authenticate
+    # Set current session if available (doesn't redirect if not authenticated)
+    def set_current_session
       # Allow tests to set session via test_session_id header
       if Rails.env.test? && request.headers["X-Test-Session-ID"].present?
         session_id = request.headers["X-Test-Session-ID"]
@@ -16,7 +17,12 @@ class ApplicationController < ActionController::Base
 
       if session_record = Session.find_by_id(session_id)
         Current.session = session_record
-      else
+      end
+    end
+
+    # Use this in controllers/actions that require authentication
+    def require_authentication
+      unless Current.session
         redirect_to sign_in_path
       end
     end

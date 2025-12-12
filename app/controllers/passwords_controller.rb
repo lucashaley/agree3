@@ -1,4 +1,5 @@
 class PasswordsController < ApplicationController
+  before_action :require_authentication
   before_action :set_user
 
   def edit
