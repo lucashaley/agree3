@@ -15,8 +15,14 @@ class Sessions::PasswordlessesController < ApplicationController
     @user = User.find_by(email: params[:email])
 
     if @user.nil?
-      # Create new user account
-      @user = User.create!(email: params[:email], verified: false)
+      # Create new user account with random password
+      random_password = SecureRandom.base58(24)
+      @user = User.create!(
+        email: params[:email],
+        password: random_password,
+        password_confirmation: random_password,
+        verified: false
+      )
       send_email_verification
       redirect_to sign_in_path, notice: "Account created! Check your email to verify and sign in"
     elsif @user.verified?
