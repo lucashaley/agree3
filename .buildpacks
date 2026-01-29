@@ -1,2 +1,5 @@
 https://github.com/heroku/heroku-buildpack-apt.git
+https://github.com/heroku/heroku-buildpack-nodejs.git
+https://github.com/einSelbst/heroku-buildpack-imagemagick.git
 https://github.com/heroku/heroku-buildpack-ruby.git
+https://github.com/elishaterada/heroku-google-application-credentials-buildpack.git
