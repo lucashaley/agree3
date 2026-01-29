@@ -212,8 +212,8 @@ class StatementsController < ApplicationController
 
   # GET /statements/1/png
   def png
-    require 'mini_magick'
-    require 'tempfile'
+    require "mini_magick"
+    require "tempfile"
 
     Rails.logger.info "PNG action called for statement #{@statement.id}"
 
@@ -221,7 +221,7 @@ class StatementsController < ApplicationController
     Rails.logger.info "SVG generated, length: #{svg_content.length}"
 
     # Write SVG to tempfile, then convert to PNG
-    Tempfile.create(['statement', '.svg']) do |svg_file|
+    Tempfile.create([ "statement", ".svg" ]) do |svg_file|
       svg_file.write(svg_content)
       svg_file.rewind
 
@@ -241,8 +241,8 @@ class StatementsController < ApplicationController
 
   # GET /statements/1/jpg
   def jpg
-    require 'mini_magick'
-    require 'tempfile'
+    require "mini_magick"
+    require "tempfile"
 
     Rails.logger.info "JPG action called for statement #{@statement.id}"
 
@@ -250,7 +250,7 @@ class StatementsController < ApplicationController
     Rails.logger.info "SVG generated, length: #{svg_content.length}, bg: #{background_color}"
 
     # Write SVG to tempfile, then convert to JPG
-    Tempfile.create(['statement', '.svg']) do |svg_file|
+    Tempfile.create([ "statement", ".svg" ]) do |svg_file|
       svg_file.write(svg_content)
       svg_file.rewind
 
@@ -405,6 +405,6 @@ class StatementsController < ApplicationController
         </svg>
       SVG
 
-      return_colors ? [svg_content, colors[:background]] : svg_content
+      return_colors ? [ svg_content, colors[:background] ] : svg_content
     end
 end

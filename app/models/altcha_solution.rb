@@ -12,10 +12,10 @@ class AltchaSolution < ApplicationRecord
     solution = self.new(p)
 
     begin
-      return solution.save
+      solution.save
     rescue ActiveRecord::RecordNotUnique
       # Replay attack
-      return false
+      false
     end
   end
 
@@ -23,6 +23,6 @@ class AltchaSolution < ApplicationRecord
     # Replay attacks are protected by the time stamp in the salt of the challenge for
     # the duration configured in the timeout. All solutions in the database that older
     # can be deleted.
-    AltchaSolution.where('created_at < ?', Time.now - Altcha.timeout).delete_all
+    AltchaSolution.where("created_at < ?", Time.now - Altcha.timeout).delete_all
   end
 end

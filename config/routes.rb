@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  get '/altcha', to: 'altcha#new'
+  get "/altcha", to: "altcha#new"
   get "contact_form", to: "contact#new"
   post "contact", to: "contact#create"
   get "about", to: "pages#about"
