@@ -96,3 +96,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+# For dependency graphing
+gem "ruby-graphviz"
+plugin "bundler-graph"
