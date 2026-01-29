@@ -14,10 +14,12 @@ export default class extends Controller {
   }
 
   startCarousel() {
-    // Show each slide for 6 seconds, then fade to next
-    this.intervalId = setInterval(() => {
-      this.nextSlide()
-    }, 6000) // 6 seconds
+    // Only start auto-rotation if there's more than one slide
+    if (this.slideTargets.length > 1) {
+      this.intervalId = setInterval(() => {
+        this.nextSlide()
+      }, 6000) // 6 seconds
+    }
   }
 
   stopCarousel() {
@@ -27,6 +29,9 @@ export default class extends Controller {
   }
 
   nextSlide() {
+    // Only rotate if there's more than one slide
+    if (this.slideTargets.length <= 1) return
+
     // Hide current slide
     this.slideTargets[this.currentIndex].classList.remove("active")
     this.slideTargets[this.currentIndex].style.display = "none"
