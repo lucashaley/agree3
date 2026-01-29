@@ -30,12 +30,17 @@ class StatementsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create statement" do
+    original_method = AltchaSolution.method(:verify_and_save)
+    AltchaSolution.define_singleton_method(:verify_and_save) { |*args| true }
+
     assert_difference("Statement.count") do
-      post statements_url, params: { statement: { content: "new statement" } }
+      post statements_url, params: { statement: { content: "new statement" }, altcha: "mock" }
     end
 
     assert_redirected_to statement_url(Statement.last)
     assert_equal @user, Statement.last.author
+
+    AltchaSolution.define_singleton_method(:verify_and_save, original_method)
   end
 
   test "should not create statement without content" do
