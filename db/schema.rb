@@ -10,10 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_09_185358) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_21_020012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
+
+  create_table "altcha_solutions", force: :cascade do |t|
+    t.string "algorithm"
+    t.string "challenge"
+    t.datetime "created_at", null: false
+    t.integer "number"
+    t.string "salt"
+    t.string "signature"
+    t.datetime "updated_at", null: false
+    t.index ["algorithm", "challenge", "salt", "signature", "number"], name: "index_altcha_solutions", unique: true
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false

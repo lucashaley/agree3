@@ -1,9 +1,8 @@
 <%= form_with(model: statement) do |form| %>
   <% if statement.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(statement.errors.count, "error") %> prohibited this statement from being saved:</h2>
-
-      <ul>
+    <div class="alert alert-error mb-4">
+      <h2 class="font-bold"><%= pluralize(statement.errors.count, "error") %> prohibited this statement from being saved:</h2>
+      <ul class="list-disc list-inside">
         <% statement.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
@@ -11,12 +10,25 @@
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :content, style: "display: block" %>
-    <%= form.textarea :content %>
+  <div class="form-control mb-4">
+    <%= form.label :content, class: "label" do %>
+      <span class="label-text text-lg font-semibold">Content</span>
+    <% end %>
+    <%= form.textarea :content, class: "textarea textarea-bordered textarea-lg w-full h-48 text-2xl", placeholder: "Enter your statement here..." %>
   </div>
 
-  <div>
-    <%= form.submit %>
-  </div>
+  <% if statement.new_record? %>
+    <div class="flex gap-4 items-stretch">
+      <div class="flex-shrink-0">
+        <altcha-widget challengeurl="<%= altcha_url %>"></altcha-widget>
+      </div>
+      <div class="flex-grow">
+        <%= form.submit class: "btn btn-primary h-full w-full text-lg" %>
+      </div>
+    </div>
+  <% else %>
+    <div>
+      <%= form.submit class: "btn btn-primary btn-lg btn-block text-lg" %>
+    </div>
+  <% end %>
 <% end %>

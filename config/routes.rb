@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get '/altcha', to: 'altcha#new'
   get "contact_form", to: "contact#new"
   post "contact", to: "contact#create"
   get "about", to: "pages#about"
@@ -35,6 +36,7 @@ Rails.application.routes.draw do
   resources :statements do
     collection do
       get :search
+      post :sync_agreements
     end
     member do
       post :agree
@@ -42,6 +44,8 @@ Rails.application.routes.draw do
       post :flag
       delete :unflag
       get :svg
+      get :png
+      get :jpg
     end
   end
 end

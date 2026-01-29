@@ -4,105 +4,96 @@
 
 <h1 class="text-3xl font-bold mb-6">Statements</h1>
 
-<!-- Top 10 Statements by Votes -->
 <div class="mb-8">
-  <h2 class="text-2xl font-bold mb-4">Top Statements by Agreement</h2>
-  <div class="overflow-x-auto">
-    <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th class="w-16">Rank</th>
-          <th>Statement</th>
-          <th class="w-24 text-center">Votes</th>
-          <th class="w-24"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @top_statements.each_with_index do |statement, index| %>
-          <tr>
-            <td class="font-bold text-center"><%= index + 1 %></td>
-            <td>
-              <%= link_to statement.content, statement_path(statement), class: "link link-hover" %>
-            </td>
-            <td class="text-center font-semibold"><%= statement.get_upvotes.size %></td>
-            <td>
-              <%= link_to "View", statement_path(statement), class: "btn btn-sm btn-ghost" %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+  <%= link_to "Create a new statement", new_statement_path, class: "btn btn-primary btn-lg w-full text-2xl py-6 h-auto" %>
 </div>
 
-<!-- Top 10 Statements by Variants -->
-<div class="mb-8">
-  <h2 class="text-2xl font-bold mb-4">Top Statements by Variants</h2>
-  <div class="overflow-x-auto">
-    <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th class="w-16">Rank</th>
-          <th>Statement</th>
-          <th class="w-24 text-center">Variants</th>
-          <th class="w-24"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if @top_by_variants.any? %>
-          <% @top_by_variants.each_with_index do |statement, index| %>
-            <tr>
+<!-- Responsive Grid for Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Top 10 Statements by Votes -->
+  <div>
+    <h2 class="text-2xl font-bold mb-4">Top Statements by Agreement</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="w-16">Rank</th>
+            <th>Statement</th>
+            <th class="w-24 text-center">Votes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @top_statements.each_with_index do |statement, index| %>
+            <tr class="cursor-pointer hover:bg-base-200" onclick="window.location='<%= statement_path(statement) %>'">
               <td class="font-bold text-center"><%= index + 1 %></td>
+              <td><%= statement.content %></td>
+              <td class="text-center font-semibold"><%= statement.get_upvotes.size %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Top 10 Statements by Variants -->
+  <div>
+    <h2 class="text-2xl font-bold mb-4">Top Statements by Variants</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="w-16">Rank</th>
+            <th>Statement</th>
+            <th class="w-24 text-center">Variants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @top_by_variants.any? %>
+            <% @top_by_variants.each_with_index do |statement, index| %>
+              <tr class="cursor-pointer hover:bg-base-200" onclick="window.location='<%= statement_path(statement) %>'">
+                <td class="font-bold text-center"><%= index + 1 %></td>
+                <td><%= statement.content %></td>
+                <td class="text-center font-semibold"><%= statement.descendant_count %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="text-center italic text-gray-500">No statements with variants yet</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 10 Most Recent Statements -->
+  <div>
+    <h2 class="text-2xl font-bold mb-4">Recent Statements</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Statement</th>
+            <th class="w-32 text-center">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_statements.each do |statement| %>
+            <tr class="cursor-pointer hover:bg-base-200" onclick="window.location='<%= statement_path(statement) %>'">
               <td>
-                <%= link_to statement.content, statement_path(statement), class: "link link-hover" %>
+                <%= statement.content %>
+                <% if statement.parent.present? %>
+                  <span class="badge badge-sm badge-ghost ml-2">variant</span>
+                <% end %>
               </td>
-              <td class="text-center font-semibold"><%= statement.descendant_count %></td>
-              <td>
-                <%= link_to "View", statement_path(statement), class: "btn btn-sm btn-ghost" %>
+              <td class="text-center text-sm text-gray-600">
+                <%= time_ago_in_words(statement.created_at) %> ago
               </td>
             </tr>
           <% end %>
-        <% else %>
-          <tr>
-            <td colspan="4" class="text-center italic text-gray-500">No statements with variants yet</td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- 10 Most Recent Statements -->
-<div class="mb-8">
-  <h2 class="text-2xl font-bold mb-4">Recent Statements</h2>
-  <div class="overflow-x-auto">
-    <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th>Statement</th>
-          <th class="w-32 text-center">Created</th>
-          <th class="w-24"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @recent_statements.each do |statement| %>
-          <tr>
-            <td>
-              <%= link_to statement.content, statement_path(statement), class: "link link-hover" %>
-              <% if statement.parent.present? %>
-                <span class="badge badge-sm badge-ghost ml-2">variant</span>
-              <% end %>
-            </td>
-            <td class="text-center text-sm text-gray-600">
-              <%= time_ago_in_words(statement.created_at) %> ago
-            </td>
-            <td>
-              <%= link_to "View", statement_path(statement), class: "btn btn-sm btn-ghost" %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -124,5 +115,5 @@
 </div>
 
 <div class="mt-6">
-  <%= link_to "New statement", new_statement_path, class: "btn btn-primary" %>
+  <%= link_to "New statement", new_statement_path, class: "btn btn-primary btn-lg text-lg" %>
 </div>

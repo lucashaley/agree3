@@ -1,8 +1,5 @@
 <p style="color: green"><%= notice %></p>
 
-<%= render partial: "statement_full", locals: { statement: @statement } %>
-<%# render @statement %>
-
 <!-- Show if user has voted for related statements -->
 <%
   voted_ancestors = @statement.all_ancestors.select { |ancestor| Current.user.voted_for?(ancestor) }
@@ -42,33 +39,42 @@
   </div>
 <% end %>
 
-<% if @statement.parent.present? %>
-  <div class="my-8">
-    <h2 class="text-2xl font-bold mb-4">Parent Statement</h2>
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <%= link_to statement_path(@statement.parent), class: "text-lg" do %>
-          <%= @statement.parent.content %>
-        <% end %>
-      </div>
-    </div>
+<!-- Responsive layout: horizontal on large screens, vertical on small/medium -->
+<div class="flex flex-col lg:flex-row gap-6 items-start">
+  <!-- Main statement (left side on large screens) -->
+  <div class="flex-shrink-0">
+    <%= render partial: "statement_full", locals: { statement: @statement } %>
   </div>
 
-  <!-- Show diff between current and parent statement -->
-  <div class="my-8">
-    <h2 class="text-2xl font-bold mb-4">Changes from Parent</h2>
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <div class="diff-display font-mono text-sm">
-          <%= raw Diffy::Diff.new(
-            ERB::Util.html_escape(@statement.parent.content),
-            ERB::Util.html_escape(@statement.content),
-            include_plus_and_minus_in_html: true
-          ).to_s(:html) %>
+  <!-- Right sidebar (parent + diff on large screens) -->
+  <% if @statement.parent.present? %>
+    <div class="flex flex-col gap-6 w-full lg:w-auto">
+      <!-- Parent Statement -->
+      <div>
+        <h2 class="text-2xl font-bold mb-4">Parent Statement</h2>
+        <%= link_to statement_path(@statement.parent) do %>
+          <%= render partial: "statement_small", locals: { statement: @statement.parent } %>
+        <% end %>
+      </div>
+
+      <!-- Show diff between current and parent statement -->
+      <div>
+        <h2 class="text-2xl font-bold mb-4">Changes from Parent</h2>
+        <div class="card bg-base-200">
+          <div class="card-body">
+            <div class="diff-display font-mono text-sm">
+              <%= raw Diffy::Diff.new(
+                ERB::Util.html_escape(@statement.parent.content),
+                ERB::Util.html_escape(@statement.content),
+                include_plus_and_minus_in_html: true
+              ).to_s(:html) %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  <% end %>
+</div>
 
   <style>
     .diff-display .diff ul {
@@ -98,7 +104,6 @@
       background-color: #f8d7da;
     }
   </style>
-<% end %>
 
 <% if @statement.children.any? %>
   <div class="my-8">
@@ -135,14 +140,34 @@
   </div>
 <% end %>
 
-<div class="flex gap-4 items-center my-4">
-  <% user_voted = Current.user.voted_for?(@statement) %>
-  <%= button_to user_voted ? "Unagree" : "Agree",
-      agree_statement_path(@statement),
-      method: :post,
-      class: "btn #{user_voted ? 'btn-warning' : 'btn-success'} btn-lg text-2xl px-12 py-6 h-auto min-h-0",
-      id: 'agree-button',
-      data: { turbo: false } %>
+<div class="flex gap-4 items-center my-4"
+     data-controller="agreement"
+     data-agreement-statement-id-value="<%= @statement.id %>"
+     data-agreement-initial-state-value="<%= Current.user&.voted_for?(@statement) || false %>">
+
+  <% if Current.user %>
+    <%# Logged in users: use server-side action %>
+    <% user_voted = Current.user.voted_for?(@statement) %>
+    <%= button_to user_voted ? "Unagree" : "Agree",
+        agree_statement_path(@statement),
+        method: :post,
+        class: "btn #{user_voted ? 'btn-warning' : 'btn-success'} btn-lg text-2xl px-12 py-6 h-auto min-h-0",
+        id: 'agree-button',
+        data: { turbo: false } %>
+  <% else %>
+    <%# Anonymous users: use Stimulus controller with localStorage %>
+    <button data-action="click->agreement#toggle"
+            data-agreement-target="button"
+            data-default-text="Agree"
+            data-agreed-text="Agreed ✓"
+            class="btn btn-success btn-lg text-2xl px-12 py-6 h-auto min-h-0">
+      Agree
+    </button>
+
+    <div class="text-sm text-gray-500">
+      <%= link_to "Sign in to save your agreements", sign_in_path, class: "link link-primary" %>
+    </div>
+  <% end %>
 
   <!-- Flag dropdown -->
   <div class="dropdown">
@@ -248,11 +273,52 @@
 </div>
 
 <div class="space-y-4">
-  <div>
-    <%= link_to "Edit this statement", edit_statement_path(@statement) %> |
-    <%= link_to "Back to statements", statements_path %> |
-    <%= link_to "SVG (Light)", svg_statement_path(@statement, mode: "light"), target: "_blank", class: "link link-primary" %> |
-    <%= link_to "SVG (Dark)", svg_statement_path(@statement, mode: "dark"), target: "_blank", class: "link link-primary" %>
+  <div class="flex gap-2 flex-wrap">
+    <%= link_to "Edit this statement", edit_statement_path(@statement), class: "btn btn-lg text-lg" %>
+    <%= link_to "Back to statements", statements_path, class: "btn btn-lg text-lg" %>
+    <%= link_to "SVG (Light)", svg_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "SVG (Dark)", svg_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "PNG (Light)", png_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "PNG (Dark)", png_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "JPG (Light)", jpg_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "JPG (Dark)", jpg_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+  </div>
+
+  <div class="flex gap-2 flex-wrap">
+    <%
+      share_text = "We agree that #{@statement.content}. #{statement_url(@statement)}"
+      png_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + png_statement_url(@statement, mode: 'light'))}"
+      png_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + png_statement_url(@statement, mode: 'dark'))}"
+      jpg_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + jpg_statement_url(@statement, mode: 'light'))}"
+      jpg_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + jpg_statement_url(@statement, mode: 'dark'))}"
+    %>
+    <%= link_to "Share PNG (Light) on Bluesky", png_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share PNG (Dark) on Bluesky", png_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share JPG (Light) on Bluesky", jpg_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share JPG (Dark) on Bluesky", jpg_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+  </div>
+
+  <div class="flex gap-2 flex-wrap">
+    <a href="<%= png_statement_path(@statement, mode: 'light') %>"
+       download="statement-<%= @statement.id %>-light.png"
+       class="btn btn-success btn-lg text-lg">
+      Download PNG (Light) for Instagram
+    </a>
+    <a href="<%= png_statement_path(@statement, mode: 'dark') %>"
+       download="statement-<%= @statement.id %>-dark.png"
+       class="btn btn-success btn-lg text-lg">
+      Download PNG (Dark) for Instagram
+    </a>
+    <a href="<%= jpg_statement_path(@statement, mode: 'light') %>"
+       download="statement-<%= @statement.id %>-light.jpg"
+       class="btn btn-success btn-lg text-lg">
+      Download JPG (Light) for Instagram
+    </a>
+    <a href="<%= jpg_statement_path(@statement, mode: 'dark') %>"
+       download="statement-<%= @statement.id %>-dark.jpg"
+       class="btn btn-success btn-lg text-lg">
+      Download JPG (Dark) for Instagram
+    </a>
   </div>
 
   <div>

@@ -18,12 +18,15 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# TODO for Claude: should this be in the importmap? %>
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=694a18ef20973b8cdade5635&product=sop' async='async'></script>
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-screen grid grid-rows-[auto_1fr_auto] grid-cols-1">
+  <body class="min-h-screen grid grid-rows-[auto_1fr_auto] grid-cols-1" <%= 'data-user-logged-in' if Current.user.present? %>>
     <!-- Navbar Row -->
     <navbar class="navbar bg-base-100 shadow-sm">
       <div class="navbar-start">

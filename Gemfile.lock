@@ -81,6 +81,7 @@ GEM
     acts_as_votable (0.14.0)
     addressable (2.8.8)
       public_suffix (>= 2.0.2, < 8.0)
+    altcha-rails (0.0.6)
     ast (2.4.3)
     authentication-zero (4.0.3)
     base64 (0.3.0)
@@ -428,6 +429,7 @@ PLATFORMS
 DEPENDENCIES
   acts-as-taggable-on (~> 13.0)
   acts_as_votable (~> 0.14.0)
+  altcha-rails
   authentication-zero
   bcrypt (~> 3.1.7)
   bootsnap
@@ -437,6 +439,7 @@ DEPENDENCIES
   closure_tree
   debug
   diffy
+  dotenv
   enumerate_it
   hashid-rails
   image_processing (~> 1.2)

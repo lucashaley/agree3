@@ -1,0 +1,31 @@
+<div class="card card-border border-accent w-64 aspect-square bg-base-100 shadow-sm">
+  <div class="card-body flex flex-col justify-center items-start h-full p-4">
+    <statement class="flex flex-col gap-2">
+      <preface class="text-sm font-semibold">
+        <%
+          vote_count = statement.get_upvotes.size
+          user_voted = Current.user&.voted_for?(statement) || false
+
+          if user_voted && vote_count == 1
+            preface_text = "You agree that..."
+          elsif user_voted && vote_count > 1
+            other_count = vote_count - 1
+            formatted_count = number_with_delimiter(other_count)
+            preface_text = "You and #{formatted_count} other #{other_count == 1 ? 'person' : 'people'} agree that..."
+          elsif vote_count == 1
+            preface_text = "1 person agrees that..."
+          elsif vote_count > 1
+            formatted_count = number_with_delimiter(vote_count)
+            preface_text = "#{formatted_count} people agree that..."
+          else
+            preface_text = "We agree that..."
+          end
+        %>
+        <%= preface_text %>
+      </preface>
+      <content class="text-lg font-black leading-tight">
+        <%= statement.content %>.
+      </content>
+    </statement>
+  </div>
+</div>

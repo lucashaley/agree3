@@ -1,6 +1,6 @@
 class StatementsController < ApplicationController
   before_action :require_authentication, only: %i[ new create edit update destroy agree create_variant flag unflag ]
-  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg flag unflag ]
+  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg png jpg flag unflag ]
 
   # GET /statements or /statements.json
   def index
@@ -37,6 +37,17 @@ class StatementsController < ApplicationController
 
   # POST /statements or /statements.json
   def create
+    # Verify ALTCHA challenge
+    unless AltchaSolution.verify_and_save(params.permit(:altcha)[:altcha])
+      @statement = Statement.new(statement_params)
+      @statement.errors.add(:base, "Please complete the verification challenge")
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @statement.errors, status: :unprocessable_entity }
+      end
+      return
+    end
+
     @statement = Statement.new(statement_params)
     @statement.author = Current.user
 
@@ -168,70 +179,96 @@ class StatementsController < ApplicationController
     end
   end
 
-  # GET /statements/1/svg
-  def svg
-    # Set SVG dimensions
-    size = 512
-    padding = 40
+  # POST /statements/sync_agreements
+  # Sync localStorage agreements to user account when they sign in
+  def sync_agreements
+    return head :unauthorized unless Current.user
 
-    # Prepare text
-    header = "we agree that..."
-    content = @statement.content
-    content += "." unless content.end_with?(".", "!", "?")
+    statement_ids = params[:statement_ids] || []
 
-    # Calculate header dimensions
-    header_size = 24
-    header_line_height = header_size * 1.2
-    header_total_height = header_line_height + 20 # header + spacing
+    # Vote for each statement the user agreed to while anonymous
+    synced_count = 0
+    statement_ids.each do |statement_id|
+      statement = Statement.find_by(id: statement_id)
+      next unless statement
 
-    # Calculate available space for content
-    available_width = size - (padding * 2)
-    available_height = size - (padding * 2) - header_total_height
-
-    # Calculate optimal font size that fills the space
-    content_size = calculate_optimal_font_size(content, available_width, available_height)
-
-    # Determine color scheme based on mode parameter
-    mode = params[:mode] == "dark" ? "dark" : "light"
-    colors = if mode == "dark"
-      {
-        background: "#111827",
-        text: "#f9fafb",
-        header: "#9ca3af"
-      }
-    else
-      {
-        background: "#f8f9fa",
-        text: "#111827",
-        header: "#6b7280"
-      }
+      # Only add vote if user hasn't already voted
+      unless Current.user.voted_for?(statement)
+        statement.vote_by voter: Current.user
+        synced_count += 1
+      end
     end
 
-    # Generate SVG
-    svg_content = <<~SVG
-      <?xml version="1.0" encoding="UTF-8"?>
-      <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="#{size}" height="#{size}" fill="#{colors[:background]}"/>
-        <text x="#{padding}" y="#{padding + header_size}"
-              font-family="'Jost', sans-serif"
-              font-size="#{header_size}"
-              font-weight="600"
-              fill="#{colors[:header]}"
-              text-anchor="left">
-          #{header}
-        </text>
-        <text x="#{padding}" y="#{padding + header_total_height + content_size}"
-              font-family="'Jost', sans-serif"
-              font-size="#{content_size}"
-              font-weight="600"
-              fill="#{colors[:text]}"
-              text-anchor="left">
-          #{wrap_text(content, available_width, content_size)}
-        </text>
-      </svg>
-    SVG
+    render json: { success: true, synced: synced_count }
+  rescue => e
+    render json: { success: false, error: e.message }, status: :unprocessable_entity
+  end
 
+  # GET /statements/1/svg
+  def svg
+    svg_content = generate_svg_content(@statement, params[:mode])
     render xml: svg_content, content_type: "image/svg+xml"
+  end
+
+  # GET /statements/1/png
+  def png
+    require 'mini_magick'
+    require 'tempfile'
+
+    Rails.logger.info "PNG action called for statement #{@statement.id}"
+
+    svg_content = generate_svg_content(@statement, params[:mode])
+    Rails.logger.info "SVG generated, length: #{svg_content.length}"
+
+    # Write SVG to tempfile, then convert to PNG
+    Tempfile.create(['statement', '.svg']) do |svg_file|
+      svg_file.write(svg_content)
+      svg_file.rewind
+
+      image = MiniMagick::Image.open(svg_file.path)
+      image.format "png"
+
+      png_blob = image.to_blob
+      Rails.logger.info "PNG converted successfully, blob size: #{png_blob.bytesize} bytes"
+
+      send_data png_blob, type: "image/png", disposition: "inline"
+    end
+  rescue => e
+    Rails.logger.error "PNG conversion error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    render plain: "Error generating PNG: #{e.class.name}: #{e.message}\n\n#{e.backtrace.first(10).join("\n")}", status: :internal_server_error
+  end
+
+  # GET /statements/1/jpg
+  def jpg
+    require 'mini_magick'
+    require 'tempfile'
+
+    Rails.logger.info "JPG action called for statement #{@statement.id}"
+
+    svg_content, background_color = generate_svg_content(@statement, params[:mode], return_colors: true)
+    Rails.logger.info "SVG generated, length: #{svg_content.length}, bg: #{background_color}"
+
+    # Write SVG to tempfile, then convert to JPG
+    Tempfile.create(['statement', '.svg']) do |svg_file|
+      svg_file.write(svg_content)
+      svg_file.rewind
+
+      image = MiniMagick::Image.open(svg_file.path)
+      image.format "jpg"
+      image.quality "95"
+      image.background background_color
+      image.flatten
+
+      jpg_blob = image.to_blob
+      Rails.logger.info "JPG converted successfully, blob size: #{jpg_blob.bytesize} bytes"
+
+      send_data jpg_blob, type: "image/jpeg", disposition: "inline"
+    end
+  rescue => e
+    Rails.logger.error "JPG conversion error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    render plain: "Error generating JPG: #{e.class.name}: #{e.message}\n\n#{e.backtrace.first(10).join("\n")}", status: :internal_server_error
   end
 
   private
@@ -302,5 +339,72 @@ class StatementsController < ApplicationController
       lines.map.with_index do |line, i|
         %(<tspan x="40" dy="#{i == 0 ? 0 : font_size * 1.2}">#{line}</tspan>)
       end.join("\n          ")
+    end
+
+    # Generate SVG content for a statement
+    def generate_svg_content(statement, mode_param = nil, return_colors: false)
+      # Set SVG dimensions
+      size = 512
+      padding = 40
+
+      # Prepare text
+      header = "we agree that..."
+      content = statement.content
+      content += "." unless content.end_with?(".", "!", "?")
+
+      # Calculate header dimensions
+      header_size = 24
+      header_line_height = header_size * 1.2
+      header_total_height = header_line_height + 20 # header + spacing
+
+      # Calculate available space for content
+      available_width = size - (padding * 2)
+      available_height = size - (padding * 2) - header_total_height
+
+      # Calculate optimal font size that fills the space
+      content_size = calculate_optimal_font_size(content, available_width, available_height)
+
+      # Determine color scheme based on mode parameter
+      mode = mode_param == "dark" ? "dark" : "light"
+      colors = if mode == "dark"
+        {
+          background: "#111827",
+          text: "#f9fafb",
+          header: "#9ca3af"
+        }
+      else
+        {
+          background: "#f8f9fa",
+          text: "#111827",
+          header: "#6b7280"
+        }
+      end
+
+      # Generate SVG
+      # Use Futura Bold for ImageMagick compatibility
+      svg_content = <<~SVG
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="#{size}" height="#{size}" fill="#{colors[:background]}"/>
+          <text x="#{padding}" y="#{padding + header_size}"
+                font-family="Futura, sans-serif"
+                font-size="#{header_size}"
+                font-weight="700"
+                fill="#{colors[:header]}"
+                text-anchor="left">
+            #{header}
+          </text>
+          <text x="#{padding}" y="#{padding + header_total_height + content_size}"
+                font-family="Futura, sans-serif"
+                font-size="#{content_size}"
+                font-weight="700"
+                fill="#{colors[:text]}"
+                text-anchor="left">
+            #{wrap_text(content, available_width, content_size)}
+          </text>
+        </svg>
+      SVG
+
+      return_colors ? [svg_content, colors[:background]] : svg_content
     end
 end

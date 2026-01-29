@@ -59,6 +59,8 @@ gem "diffy"
 gem "hashid-rails"
 # https://github.com/Casecommons/pg_search
 gem "pg_search"
+# https://github.com/zonque/altcha-rails
+gem "altcha-rails"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -77,6 +79,8 @@ group :development, :test do
   gem "rainbow"
   # https://github.com/ryanb/letter_opener
   gem "letter_opener"
+  # https://github.com/bkeepers/dotenv
+  gem 'dotenv'
 end
 
 group :development do
