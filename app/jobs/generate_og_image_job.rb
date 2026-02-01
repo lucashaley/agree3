@@ -11,7 +11,7 @@ class GenerateOgImageJob < ApplicationJob
     require "mini_magick"
     require "tempfile"
 
-    Tempfile.create(["statement-og", ".svg"]) do |svg_file|
+    Tempfile.create([ "statement-og", ".svg" ]) do |svg_file|
       svg_file.write(svg_content)
       svg_file.rewind
 
@@ -117,12 +117,12 @@ class GenerateOgImageJob < ApplicationJob
     char_width = font_size * 0.6
 
     words.each do |word|
-      test_line = (current_line + [word]).join(" ")
+      test_line = (current_line + [ word ]).join(" ")
       line_width = test_line.length * char_width
 
       if line_width > max_width && current_line.any?
         lines << current_line.join(" ")
-        current_line = [word]
+        current_line = [ word ]
       else
         current_line << word
       end
