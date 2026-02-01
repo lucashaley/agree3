@@ -46,6 +46,7 @@ Rails.application.routes.draw do
       get :svg
       get :png
       get :jpg
+      get :og_image
     end
   end
 end

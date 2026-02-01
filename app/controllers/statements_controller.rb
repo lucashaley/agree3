@@ -271,6 +271,36 @@ class StatementsController < ApplicationController
     render plain: "Error generating JPG: #{e.class.name}: #{e.message}\n\n#{e.backtrace.first(10).join("\n")}", status: :internal_server_error
   end
 
+  # GET /statements/1/og_image
+  # Generate Facebook Open Graph optimized image (1200x630)
+  def og_image
+    require "mini_magick"
+    require "tempfile"
+
+    Rails.logger.info "OG image action called for statement #{@statement.id}"
+
+    svg_content, background_color = generate_svg_content_og(@statement)
+    Rails.logger.info "OG SVG generated, length: #{svg_content.length}"
+
+    # Write SVG to tempfile, then convert to PNG
+    Tempfile.create(["statement-og", ".svg"]) do |svg_file|
+      svg_file.write(svg_content)
+      svg_file.rewind
+
+      image = MiniMagick::Image.open(svg_file.path)
+      image.format "png"
+
+      png_blob = image.to_blob
+      Rails.logger.info "OG PNG converted successfully, blob size: #{png_blob.bytesize} bytes"
+
+      send_data png_blob, type: "image/png", disposition: "inline"
+    end
+  rescue => e
+    Rails.logger.error "OG image generation error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    render plain: "Error generating OG image: #{e.class.name}: #{e.message}\n\n#{e.backtrace.first(10).join("\n")}", status: :internal_server_error
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_statement
@@ -339,6 +369,73 @@ class StatementsController < ApplicationController
       lines.map.with_index do |line, i|
         %(<tspan x="40" dy="#{i == 0 ? 0 : font_size * 1.2}">#{line}</tspan>)
       end.join("\n          ")
+    end
+
+    # Generate SVG content optimized for Facebook Open Graph (1200x630)
+    def generate_svg_content_og(statement, mode_param = nil)
+      # Facebook Open Graph optimal dimensions
+      width = 1200
+      height = 630
+      padding = 60
+
+      # Prepare text
+      header = "we agree that..."
+      content = statement.content
+      content += "." unless content.end_with?(".", "!", "?")
+
+      # Calculate header dimensions
+      header_size = 48
+      header_line_height = header_size * 1.2
+      header_total_height = header_line_height + 40 # header + spacing
+
+      # Calculate available space for content
+      available_width = width - (padding * 2)
+      available_height = height - (padding * 2) - header_total_height
+
+      # Calculate optimal font size that fills the space
+      content_size = calculate_optimal_font_size(content, available_width, available_height)
+
+      # Determine color scheme
+      mode = mode_param == "dark" ? "dark" : "light"
+      colors = if mode == "dark"
+        {
+          background: "#111827",
+          text: "#f9fafb",
+          header: "#9ca3af"
+        }
+      else
+        {
+          background: "#f8f9fa",
+          text: "#111827",
+          header: "#6b7280"
+        }
+      end
+
+      # Generate SVG for Facebook Open Graph
+      svg_content = <<~SVG
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="#{width}" height="#{height}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="#{width}" height="#{height}" fill="#{colors[:background]}"/>
+          <text x="#{padding}" y="#{padding + header_size}"
+                font-family="Futura, sans-serif"
+                font-size="#{header_size}"
+                font-weight="700"
+                fill="#{colors[:header]}"
+                text-anchor="left">
+            #{header}
+          </text>
+          <text x="#{padding}" y="#{padding + header_total_height + content_size}"
+                font-family="Futura, sans-serif"
+                font-size="#{content_size}"
+                font-weight="700"
+                fill="#{colors[:text]}"
+                text-anchor="left">
+            #{wrap_text(content, available_width, content_size)}
+          </text>
+        </svg>
+      SVG
+
+      svg_content
     end
 
     # Generate SVG content for a statement
