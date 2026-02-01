@@ -1,3 +1,19 @@
+<% content_for :head do %>
+  <!-- Open Graph Meta Tags for Social Media Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
+  <meta property="og:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
+  <meta property="og:image" content="<%= png_statement_url(@statement, mode: 'light', host: request.host_with_port) %>">
+  <meta property="og:url" content="<%= statement_url(@statement, host: request.host_with_port) %>">
+  <meta property="og:site_name" content="we agree that...">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
+  <meta name="twitter:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
+  <meta name="twitter:image" content="<%= png_statement_url(@statement, mode: 'light', host: request.host_with_port) %>">
+<% end %>
+
 <p style="color: green"><%= notice %></p>
 
 <!-- Show if user has voted for related statements -->
