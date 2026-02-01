@@ -97,6 +97,16 @@ class Statement < ApplicationRecord
     text
   end
 
+  # Check if og_image needs migration from PNG to SVG
+  # Lazy migration: regenerate PNG attachments as SVG on first access
+  def ensure_svg_og_image
+    return if !og_image.attached?
+    return if og_image.content_type == "image/svg+xml"
+
+    # Has old PNG attachment - regenerate as SVG
+    GenerateOgImageJob.perform_later(id)
+  end
+
   private
 
   def generate_og_image

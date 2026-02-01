@@ -212,26 +212,36 @@ class StatementsController < ApplicationController
 
   # GET /statements/1/png
   def png
-    require "mini_magick"
-    require "tempfile"
+    # If OG image is attached (SVG), use Cloudinary transformation
+    if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml"
+      redirect_to @statement.og_image.url(
+        transformation: [
+          { fetch_format: :png }
+        ]
+      ), status: :moved_permanently
+    else
+      # Fallback to dynamic SVG generation and MiniMagick conversion
+      require "mini_magick"
+      require "tempfile"
 
-    Rails.logger.info "PNG action called for statement #{@statement.id}"
+      Rails.logger.info "PNG action called for statement #{@statement.id}"
 
-    svg_content = generate_svg_content(@statement, params[:mode])
-    Rails.logger.info "SVG generated, length: #{svg_content.length}"
+      svg_content = generate_svg_content(@statement, params[:mode])
+      Rails.logger.info "SVG generated, length: #{svg_content.length}"
 
-    # Write SVG to tempfile, then convert to PNG
-    Tempfile.create([ "statement", ".svg" ]) do |svg_file|
-      svg_file.write(svg_content)
-      svg_file.rewind
+      # Write SVG to tempfile, then convert to PNG
+      Tempfile.create([ "statement", ".svg" ]) do |svg_file|
+        svg_file.write(svg_content)
+        svg_file.rewind
 
-      image = MiniMagick::Image.open(svg_file.path)
-      image.format "png"
+        image = MiniMagick::Image.open(svg_file.path)
+        image.format "png"
 
-      png_blob = image.to_blob
-      Rails.logger.info "PNG converted successfully, blob size: #{png_blob.bytesize} bytes"
+        png_blob = image.to_blob
+        Rails.logger.info "PNG converted successfully, blob size: #{png_blob.bytesize} bytes"
 
-      send_data png_blob, type: "image/png", disposition: "inline"
+        send_data png_blob, type: "image/png", disposition: "inline"
+      end
     end
   rescue => e
     Rails.logger.error "PNG conversion error: #{e.class.name}: #{e.message}"
@@ -241,29 +251,39 @@ class StatementsController < ApplicationController
 
   # GET /statements/1/jpg
   def jpg
-    require "mini_magick"
-    require "tempfile"
+    # If OG image is attached (SVG), use Cloudinary transformation
+    if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml"
+      redirect_to @statement.og_image.url(
+        transformation: [
+          { fetch_format: :jpg, quality: 95 }
+        ]
+      ), status: :moved_permanently
+    else
+      # Fallback to dynamic SVG generation and MiniMagick conversion
+      require "mini_magick"
+      require "tempfile"
 
-    Rails.logger.info "JPG action called for statement #{@statement.id}"
+      Rails.logger.info "JPG action called for statement #{@statement.id}"
 
-    svg_content, background_color = generate_svg_content(@statement, params[:mode], return_colors: true)
-    Rails.logger.info "SVG generated, length: #{svg_content.length}, bg: #{background_color}"
+      svg_content, background_color = generate_svg_content(@statement, params[:mode], return_colors: true)
+      Rails.logger.info "SVG generated, length: #{svg_content.length}, bg: #{background_color}"
 
-    # Write SVG to tempfile, then convert to JPG
-    Tempfile.create([ "statement", ".svg" ]) do |svg_file|
-      svg_file.write(svg_content)
-      svg_file.rewind
+      # Write SVG to tempfile, then convert to JPG
+      Tempfile.create([ "statement", ".svg" ]) do |svg_file|
+        svg_file.write(svg_content)
+        svg_file.rewind
 
-      image = MiniMagick::Image.open(svg_file.path)
-      image.format "jpg"
-      image.quality "95"
-      image.background background_color
-      image.flatten
+        image = MiniMagick::Image.open(svg_file.path)
+        image.format "jpg"
+        image.quality "95"
+        image.background background_color
+        image.flatten
 
-      jpg_blob = image.to_blob
-      Rails.logger.info "JPG converted successfully, blob size: #{jpg_blob.bytesize} bytes"
+        jpg_blob = image.to_blob
+        Rails.logger.info "JPG converted successfully, blob size: #{jpg_blob.bytesize} bytes"
 
-      send_data jpg_blob, type: "image/jpeg", disposition: "inline"
+        send_data jpg_blob, type: "image/jpeg", disposition: "inline"
+      end
     end
   rescue => e
     Rails.logger.error "JPG conversion error: #{e.class.name}: #{e.message}"
@@ -272,10 +292,23 @@ class StatementsController < ApplicationController
   end
 
   # GET /statements/1/og_image
-  # Serve the pre-generated Facebook Open Graph image (1200x630)
+  # Serve the Facebook Open Graph image (1200x630) via Cloudinary transformation
   def og_image
+    @statement.ensure_svg_og_image
+
     if @statement.og_image.attached?
-      redirect_to rails_blob_path(@statement.og_image, disposition: "inline")
+      # If it's an SVG, use Cloudinary transformation to PNG
+      if @statement.og_image.content_type == "image/svg+xml"
+        redirect_to @statement.og_image.url(
+          transformation: [
+            { width: 1200, height: 630, crop: :fill },
+            { fetch_format: :png }
+          ]
+        ), status: :moved_permanently
+      else
+        # Old PNG format - serve directly
+        redirect_to rails_blob_path(@statement.og_image, disposition: "inline")
+      end
     else
       # Fallback: image is being generated by background job
       render plain: "OG image is being generated, please try again in a moment", status: :accepted

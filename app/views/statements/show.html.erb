@@ -3,7 +3,13 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
   <meta property="og:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
-  <meta property="og:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
+
+  <% if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml" %>
+    <meta property="og:image" content="<%= @statement.og_image.url(transformation: [{ width: 1200, height: 630, crop: :fill }, { fetch_format: :png }]) %>">
+  <% else %>
+    <meta property="og:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
+  <% end %>
+
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/png">
@@ -14,7 +20,12 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
   <meta name="twitter:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
-  <meta name="twitter:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
+
+  <% if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml" %>
+    <meta name="twitter:image" content="<%= @statement.og_image.url(transformation: [{ width: 1200, height: 630, crop: :fill }, { fetch_format: :png }]) %>">
+  <% else %>
+    <meta name="twitter:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
+  <% end %>
 <% end %>
 
 <p style="color: green"><%= notice %></p>

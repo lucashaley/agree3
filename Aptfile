@@ -1,6 +1,1 @@
-imagemagick
-libmagickcore-6.q16-7
-libmagickcore-6.q16-7-extra
-libmagickwand-6.q16-7
-libmagickwand-dev
-ghostscript
+# ImageMagick dependencies removed - using Cloudinary for image transformations instead

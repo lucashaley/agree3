@@ -7,27 +7,15 @@ class GenerateOgImageJob < ApplicationJob
     # Generate SVG content (1200x630 for Facebook)
     svg_content = generate_svg_content_og(statement)
 
-    # Convert SVG to PNG and attach to statement
-    require "mini_magick"
-    require "tempfile"
+    # Attach SVG directly to Active Storage
+    # Cloudinary will handle transformations to PNG/JPG on-demand
+    statement.og_image.attach(
+      io: StringIO.new(svg_content),
+      filename: "og_image.svg",
+      content_type: "image/svg+xml"
+    )
 
-    Tempfile.create([ "statement-og", ".svg" ]) do |svg_file|
-      svg_file.write(svg_content)
-      svg_file.rewind
-
-      image = MiniMagick::Image.open(svg_file.path)
-      image.format "png"
-      png_blob = image.to_blob
-
-      # Attach to Active Storage
-      statement.og_image.attach(
-        io: StringIO.new(png_blob),
-        filename: "og_image.png",
-        content_type: "image/png"
-      )
-    end
-
-    Rails.logger.info "OG image generated and attached for statement #{statement_id}"
+    Rails.logger.info "OG image SVG generated and attached for statement #{statement_id}"
   rescue => e
     Rails.logger.error "Failed to generate OG image for statement #{statement_id}: #{e.message}"
     Rails.logger.error e.backtrace.first(10).join("\n")
