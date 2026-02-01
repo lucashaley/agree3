@@ -283,7 +283,7 @@ class StatementsController < ApplicationController
     Rails.logger.info "OG SVG generated, length: #{svg_content.length}"
 
     # Write SVG to tempfile, then convert to PNG
-    Tempfile.create(["statement-og", ".svg"]) do |svg_file|
+    Tempfile.create([ "statement-og", ".svg" ]) do |svg_file|
       svg_file.write(svg_content)
       svg_file.rewind
 
