@@ -2,6 +2,10 @@ class Statement < ApplicationRecord
   include Hashid::Rails
   include PgSearch::Model
 
+  has_one_attached :og_image
+
+  after_create_commit :generate_og_image
+
   pg_search_scope :search_by_content,
     against: :content,
     using: {
@@ -91,5 +95,11 @@ class Statement < ApplicationRecord
     end
 
     text
+  end
+
+  private
+
+  def generate_og_image
+    GenerateOgImageJob.perform_later(id)
   end
 end
