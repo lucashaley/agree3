@@ -4,42 +4,29 @@ class GenerateOgImageJob < ApplicationJob
   def perform(statement_id)
     statement = Statement.find(statement_id)
 
-    # Generate both SVG formats
-    square_svg = generate_svg_content_square(statement)
-    social_svg = generate_svg_content_social(statement)
+    # Generate and upload both SVG formats
+    results = {}
 
-    # Upload square image (512x512) to Cloudinary
-    square_result = Cloudinary::Uploader.upload(
-      StringIO.new(square_svg),
-      resource_type: "image",
-      folder: "statements/square",
-      public_id: "statement_#{statement_id}_square",
-      format: "svg",
-      overwrite: true
-    )
+    # Square format (512x512)
+    square_svg = generate_svg_content(statement, width: 512, height: 512, padding: 40, header_size: 24, header_spacing: 20)
+    results[:square] = upload_to_cloudinary(square_svg, statement_id, "square", "statements/square")
 
-    # Upload social image (1200x630) to Cloudinary
-    social_result = Cloudinary::Uploader.upload(
-      StringIO.new(social_svg),
-      resource_type: "image",
-      folder: "statements/social",
-      public_id: "statement_#{statement_id}_social",
-      format: "svg",
-      overwrite: true
-    )
+    # Social format (1200x630)
+    social_svg = generate_svg_content(statement, width: 1200, height: 630, padding: 60, header_size: 48, header_spacing: 40)
+    results[:social] = upload_to_cloudinary(social_svg, statement_id, "social", "statements/social")
 
     # Store public_ids in database
     statement.update!(
-      square_image_public_id: square_result["public_id"],
-      social_image_public_id: social_result["public_id"]
+      square_image_public_id: results[:square]["public_id"],
+      social_image_public_id: results[:social]["public_id"]
     )
 
     # Clean up old Active Storage attachment if exists
     statement.og_image.purge if statement.og_image.attached?
 
     Rails.logger.info "Images uploaded to Cloudinary for statement #{statement_id}"
-    Rails.logger.info "  Square: #{square_result['public_id']}"
-    Rails.logger.info "  Social: #{social_result['public_id']}"
+    Rails.logger.info "  Square: #{results[:square]['public_id']}"
+    Rails.logger.info "  Social: #{results[:social]['public_id']}"
   rescue => e
     Rails.logger.error "Failed to generate images for statement #{statement_id}: #{e.message}"
     Rails.logger.error e.backtrace.first(10).join("\n")
@@ -47,71 +34,25 @@ class GenerateOgImageJob < ApplicationJob
 
   private
 
-  # Generate square SVG (512x512)
-  def generate_svg_content_square(statement)
-    size = 512
-    padding = 40
-    header = "we agree that..."
-    content = statement.content
-    content += "." unless content.end_with?(".", "!", "?")
-
-    # Header dimensions
-    header_size = 24
-    header_line_height = header_size * 1.2
-    header_total_height = header_line_height + 20
-
-    # Available space for content
-    available_width = size - (padding * 2)
-    available_height = size - (padding * 2) - header_total_height
-
-    # Calculate optimal font size
-    content_size = calculate_optimal_font_size(content, available_width, available_height)
-
-    # Light mode colors
-    colors = {
-      background: "#f8f9fa",
-      text: "#000000",
-      header: "#000000"
-    }
-
-    # Generate SVG
-    <<~SVG
-      <?xml version="1.0" encoding="UTF-8"?>
-      <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="#{size}" height="#{size}" fill="#{colors[:background]}"/>
-        <text x="#{padding}" y="#{padding + header_size}"
-              font-family="DejaVu Sans, sans-serif"
-              font-size="#{header_size}"
-              font-weight="900"
-              fill="#{colors[:header]}"
-              text-anchor="left">
-          #{header}
-        </text>
-        <text x="#{padding}" y="#{padding + header_total_height + content_size}"
-              font-family="DejaVu Sans, sans-serif"
-              font-size="#{content_size}"
-              font-weight="900"
-              fill="#{colors[:text]}"
-              text-anchor="left">
-          #{wrap_text(content, available_width, content_size, padding)}
-        </text>
-      </svg>
-    SVG
+  def upload_to_cloudinary(svg_content, statement_id, format_type, folder)
+    Cloudinary::Uploader.upload(
+      StringIO.new(svg_content),
+      resource_type: "image",
+      folder: folder,
+      public_id: "statement_#{statement_id}_#{format_type}",
+      format: "svg",
+      overwrite: true
+    )
   end
 
-  # Generate social SVG (1200x630)
-  def generate_svg_content_social(statement)
-    width = 1200
-    height = 630
-    padding = 60
+  def generate_svg_content(statement, width:, height:, padding:, header_size:, header_spacing:)
     header = "we agree that..."
     content = statement.content
     content += "." unless content.end_with?(".", "!", "?")
 
     # Header dimensions
-    header_size = 48
     header_line_height = header_size * 1.2
-    header_total_height = header_line_height + 40
+    header_total_height = header_line_height + header_spacing
 
     # Available space for content
     available_width = width - (padding * 2)
@@ -120,23 +61,16 @@ class GenerateOgImageJob < ApplicationJob
     # Calculate optimal font size
     content_size = calculate_optimal_font_size(content, available_width, available_height)
 
-    # Light mode colors
-    colors = {
-      background: "#f8f9fa",
-      text: "#000000",
-      header: "#000000"
-    }
-
     # Generate SVG
     <<~SVG
       <?xml version="1.0" encoding="UTF-8"?>
       <svg width="#{width}" height="#{height}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="#{width}" height="#{height}" fill="#{colors[:background]}"/>
+        <rect width="#{width}" height="#{height}" fill="#f8f9fa"/>
         <text x="#{padding}" y="#{padding + header_size}"
               font-family="DejaVu Sans, sans-serif"
               font-size="#{header_size}"
               font-weight="900"
-              fill="#{colors[:header]}"
+              fill="#000000"
               text-anchor="left">
           #{header}
         </text>
@@ -144,7 +78,7 @@ class GenerateOgImageJob < ApplicationJob
               font-family="DejaVu Sans, sans-serif"
               font-size="#{content_size}"
               font-weight="900"
-              fill="#{colors[:text]}"
+              fill="#000000"
               text-anchor="left">
           #{wrap_text(content, available_width, content_size, padding)}
         </text>
