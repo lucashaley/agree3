@@ -43,10 +43,10 @@ Rails.application.routes.draw do
       post :create_variant
       post :flag
       delete :unflag
-      get :square, defaults: { format: :png }
-      get :square_dark, defaults: { format: :png }
-      get :social, defaults: { format: :jpg }
-      get :social_dark, defaults: { format: :jpg }
+      get :square, to: "statements#square_png", defaults: { format: :png }
+      get :square_dark, to: "statements#square_png_dark", defaults: { format: :png }
+      get :social, to: "statements#social_jpg", defaults: { format: :jpg }
+      get :social_dark, to: "statements#social_jpg_dark", defaults: { format: :jpg }
       get :og_image
     end
   end
