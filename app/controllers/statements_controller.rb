@@ -1,6 +1,6 @@
 class StatementsController < ApplicationController
   before_action :require_authentication, only: %i[ new create edit update destroy agree create_variant flag unflag ]
-  before_action :set_statement, only: %i[ show edit update destroy agree create_variant svg png jpg flag unflag ]
+  before_action :set_statement, only: %i[ show edit update destroy agree create_variant square_png square_png_dark social_jpg social_jpg_dark og_image flag unflag ]
 
   # GET /statements or /statements.json
   def index
