@@ -43,9 +43,10 @@ Rails.application.routes.draw do
       post :create_variant
       post :flag
       delete :unflag
-      get :svg
-      get :png
-      get :jpg
+      get :square, defaults: { format: :png }
+      get :square_dark, defaults: { format: :png }
+      get :social, defaults: { format: :jpg }
+      get :social_dark, defaults: { format: :jpg }
       get :og_image
     end
   end

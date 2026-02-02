@@ -81,8 +81,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_01_200049) do
     t.text "content"
     t.datetime "created_at", null: false
     t.integer "parent_id"
+    t.string "social_image_public_id"
+    t.string "square_image_public_id"
     t.datetime "updated_at", null: false
     t.index ["author_id"], name: "index_statements_on_author_id"
+    t.index ["social_image_public_id"], name: "index_statements_on_social_image_public_id"
+    t.index ["square_image_public_id"], name: "index_statements_on_square_image_public_id"
   end
 
   create_table "taggings", force: :cascade do |t|

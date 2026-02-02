@@ -4,15 +4,16 @@
   <meta property="og:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
   <meta property="og:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
 
-  <% if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml" %>
-    <meta property="og:image" content="<%= @statement.og_image.url(transformation: [{ width: 1200, height: 630, crop: :fill }, { fetch_format: :png }]) %>">
+  <% if @statement.social_image_public_id.present? %>
+    <meta property="og:image" content="<%= cl_image_path(@statement.social_image_public_id, fetch_format: :jpg, quality: 95) %>">
+    <meta property="og:image:type" content="image/jpeg">
   <% else %>
     <meta property="og:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
+    <meta property="og:image:type" content="image/png">
   <% end %>
 
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/png">
   <meta property="og:url" content="<%= statement_url(@statement, host: request.host_with_port) %>">
   <meta property="og:site_name" content="we agree that...">
 
@@ -21,8 +22,8 @@
   <meta name="twitter:title" content="we agree that <%= truncate(@statement.content, length: 100) %>">
   <meta name="twitter:description" content="<%= pluralize(@statement.get_upvotes.size, 'person') %> agree<%= 's' if @statement.get_upvotes.size == 1 %> with this statement">
 
-  <% if @statement.og_image.attached? && @statement.og_image.content_type == "image/svg+xml" %>
-    <meta name="twitter:image" content="<%= @statement.og_image.url(transformation: [{ width: 1200, height: 630, crop: :fill }, { fetch_format: :png }]) %>">
+  <% if @statement.social_image_public_id.present? %>
+    <meta name="twitter:image" content="<%= cl_image_path(@statement.social_image_public_id, fetch_format: :jpg, quality: 95) %>">
   <% else %>
     <meta name="twitter:image" content="<%= og_image_statement_url(@statement, host: request.host_with_port) %>">
   <% end %>
@@ -315,48 +316,46 @@
   <div class="flex gap-2 flex-wrap">
     <%= link_to "Edit this statement", edit_statement_path(@statement), class: "btn btn-lg text-lg" %>
     <%= link_to "Back to statements", statements_path, class: "btn btn-lg text-lg" %>
-    <%= link_to "SVG (Light)", svg_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
-    <%= link_to "SVG (Dark)", svg_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
-    <%= link_to "PNG (Light)", png_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
-    <%= link_to "PNG (Dark)", png_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
-    <%= link_to "JPG (Light)", jpg_statement_path(@statement, mode: "light"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
-    <%= link_to "JPG (Dark)", jpg_statement_path(@statement, mode: "dark"), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "Square PNG (Light)", square_statement_path(@statement), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "Square PNG (Dark)", square_dark_statement_path(@statement), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "Social JPG (Light)", social_statement_path(@statement), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
+    <%= link_to "Social JPG (Dark)", social_dark_statement_path(@statement), target: "_blank", class: "btn btn-outline btn-lg text-lg" %>
   </div>
 
   <div class="flex gap-2 flex-wrap">
     <%
       share_text = "We agree that #{@statement.content}. #{statement_url(@statement)}"
-      png_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + png_statement_url(@statement, mode: 'light'))}"
-      png_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + png_statement_url(@statement, mode: 'dark'))}"
-      jpg_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + jpg_statement_url(@statement, mode: 'light'))}"
-      jpg_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + jpg_statement_url(@statement, mode: 'dark'))}"
+      square_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + square_statement_url(@statement))}"
+      square_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + square_dark_statement_url(@statement))}"
+      social_light_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + social_statement_url(@statement))}"
+      social_dark_share_url = "https://bsky.app/intent/compose?text=#{ERB::Util.url_encode(share_text + " " + social_dark_statement_url(@statement))}"
     %>
-    <%= link_to "Share PNG (Light) on Bluesky", png_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
-    <%= link_to "Share PNG (Dark) on Bluesky", png_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
-    <%= link_to "Share JPG (Light) on Bluesky", jpg_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
-    <%= link_to "Share JPG (Dark) on Bluesky", jpg_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share Square (Light) on Bluesky", square_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share Square (Dark) on Bluesky", square_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share Social (Light) on Bluesky", social_light_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
+    <%= link_to "Share Social (Dark) on Bluesky", social_dark_share_url, target: "_blank", rel: "noopener", class: "btn btn-info btn-lg text-lg" %>
   </div>
 
   <div class="flex gap-2 flex-wrap">
-    <a href="<%= png_statement_path(@statement, mode: 'light') %>"
-       download="statement-<%= @statement.id %>-light.png"
+    <a href="<%= square_statement_path(@statement) %>"
+       download="statement-<%= @statement.id %>-square-light.png"
        class="btn btn-success btn-lg text-lg">
-      Download PNG (Light) for Instagram
+      Download Square (Light)
     </a>
-    <a href="<%= png_statement_path(@statement, mode: 'dark') %>"
-       download="statement-<%= @statement.id %>-dark.png"
+    <a href="<%= square_dark_statement_path(@statement) %>"
+       download="statement-<%= @statement.id %>-square-dark.png"
        class="btn btn-success btn-lg text-lg">
-      Download PNG (Dark) for Instagram
+      Download Square (Dark)
     </a>
-    <a href="<%= jpg_statement_path(@statement, mode: 'light') %>"
-       download="statement-<%= @statement.id %>-light.jpg"
+    <a href="<%= social_statement_path(@statement) %>"
+       download="statement-<%= @statement.id %>-social-light.jpg"
        class="btn btn-success btn-lg text-lg">
-      Download JPG (Light) for Instagram
+      Download Social (Light)
     </a>
-    <a href="<%= jpg_statement_path(@statement, mode: 'dark') %>"
-       download="statement-<%= @statement.id %>-dark.jpg"
+    <a href="<%= social_dark_statement_path(@statement) %>"
+       download="statement-<%= @statement.id %>-social-dark.jpg"
        class="btn btn-success btn-lg text-lg">
-      Download JPG (Dark) for Instagram
+      Download Social (Dark)
     </a>
   </div>
 

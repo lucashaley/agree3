@@ -25,6 +25,8 @@ class Statement < ApplicationRecord
   FLAG_TYPES = [ "Ad Hominem", "Nonsensical", "Inappropriate" ].freeze
 
   validates :content, presence: true
+  validates :square_image_public_id, presence: true, allow_nil: true
+  validates :social_image_public_id, presence: true, allow_nil: true
 
   # Get count of each flag type
   def flag_counts
@@ -97,14 +99,9 @@ class Statement < ApplicationRecord
     text
   end
 
-  # Check if og_image needs migration from PNG to SVG
-  # Lazy migration: regenerate PNG attachments as SVG on first access
-  def ensure_svg_og_image
-    return if !og_image.attached?
-    return if og_image.content_type == "image/svg+xml"
-
-    # Has old PNG attachment - regenerate as SVG
-    GenerateOgImageJob.perform_later(id)
+  # Helper method to check if images are generated
+  def images_generated?
+    square_image_public_id.present? && social_image_public_id.present?
   end
 
   private
