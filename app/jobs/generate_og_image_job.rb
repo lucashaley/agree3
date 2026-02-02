@@ -80,7 +80,7 @@ class GenerateOgImageJob < ApplicationJob
       <svg width="#{size}" height="#{size}" xmlns="http://www.w3.org/2000/svg">
         <rect width="#{size}" height="#{size}" fill="#{colors[:background]}"/>
         <text x="#{padding}" y="#{padding + header_size}"
-              font-family="Futura, sans-serif"
+              font-family="DejaVu Sans, sans-serif"
               font-size="#{header_size}"
               font-weight="700"
               fill="#{colors[:header]}"
@@ -88,7 +88,7 @@ class GenerateOgImageJob < ApplicationJob
           #{header}
         </text>
         <text x="#{padding}" y="#{padding + header_total_height + content_size}"
-              font-family="Futura, sans-serif"
+              font-family="DejaVu Sans, sans-serif"
               font-size="#{content_size}"
               font-weight="700"
               fill="#{colors[:text]}"
@@ -133,7 +133,7 @@ class GenerateOgImageJob < ApplicationJob
       <svg width="#{width}" height="#{height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="#{width}" height="#{height}" fill="#{colors[:background]}"/>
         <text x="#{padding}" y="#{padding + header_size}"
-              font-family="Futura, sans-serif"
+              font-family="DejaVu Sans, sans-serif"
               font-size="#{header_size}"
               font-weight="700"
               fill="#{colors[:header]}"
@@ -141,7 +141,7 @@ class GenerateOgImageJob < ApplicationJob
           #{header}
         </text>
         <text x="#{padding}" y="#{padding + header_total_height + content_size}"
-              font-family="Futura, sans-serif"
+              font-family="DejaVu Sans, sans-serif"
               font-size="#{content_size}"
               font-weight="700"
               fill="#{colors[:text]}"
