@@ -295,8 +295,9 @@ class StatementsController < ApplicationController
   # Redirect to square image (512x512) on Cloudinary
   def square_png
     if @statement.square_image_public_id.present?
-      redirect_to cl_image_path(@statement.square_image_public_id, fetch_format: :png),
-                  status: :moved_permanently
+      url = Cloudinary::Utils.cloudinary_url(@statement.square_image_public_id,
+                                             fetch_format: :png)
+      redirect_to url, status: :moved_permanently
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -306,8 +307,10 @@ class StatementsController < ApplicationController
   # Redirect to inverted square image on Cloudinary
   def square_png_dark
     if @statement.square_image_public_id.present?
-      redirect_to cl_image_path(@statement.square_image_public_id, effect: "negate", fetch_format: :png),
-                  status: :moved_permanently
+      url = Cloudinary::Utils.cloudinary_url(@statement.square_image_public_id,
+                                             effect: "negate",
+                                             fetch_format: :png)
+      redirect_to url, status: :moved_permanently
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -317,8 +320,10 @@ class StatementsController < ApplicationController
   # Redirect to social image (1200x630) on Cloudinary
   def social_jpg
     if @statement.social_image_public_id.present?
-      redirect_to cl_image_path(@statement.social_image_public_id, fetch_format: :jpg, quality: 95),
-                  status: :moved_permanently
+      url = Cloudinary::Utils.cloudinary_url(@statement.social_image_public_id,
+                                             fetch_format: :jpg,
+                                             quality: 95)
+      redirect_to url, status: :moved_permanently
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -328,8 +333,11 @@ class StatementsController < ApplicationController
   # Redirect to inverted social image on Cloudinary
   def social_jpg_dark
     if @statement.social_image_public_id.present?
-      redirect_to cl_image_path(@statement.social_image_public_id, effect: "negate", fetch_format: :jpg, quality: 95),
-                  status: :moved_permanently
+      url = Cloudinary::Utils.cloudinary_url(@statement.social_image_public_id,
+                                             effect: "negate",
+                                             fetch_format: :jpg,
+                                             quality: 95)
+      redirect_to url, status: :moved_permanently
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -339,8 +347,9 @@ class StatementsController < ApplicationController
   # Serve the Facebook Open Graph image (1200x630) via Cloudinary
   def og_image
     if @statement.social_image_public_id.present?
-      redirect_to cl_image_path(@statement.social_image_public_id, fetch_format: :png),
-                  status: :moved_permanently
+      url = Cloudinary::Utils.cloudinary_url(@statement.social_image_public_id,
+                                             fetch_format: :png)
+      redirect_to url, status: :moved_permanently
     else
       render plain: "OG image is being generated, please try again in a moment", status: :accepted
     end
