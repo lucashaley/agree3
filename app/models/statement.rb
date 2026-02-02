@@ -107,6 +107,6 @@ class Statement < ApplicationRecord
   private
 
   def generate_og_image
-    GenerateOgImageJob.perform_later(id)
+    GenerateOgImageJob.perform_later(id, author_id)
   end
 end

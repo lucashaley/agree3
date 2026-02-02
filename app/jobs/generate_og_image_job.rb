@@ -1,18 +1,20 @@
 class GenerateOgImageJob < ApplicationJob
+  include ActionView::Helpers::NumberHelper
+
   queue_as :default
 
-  def perform(statement_id)
+  def perform(statement_id, author_id = nil)
     statement = Statement.find(statement_id)
 
     # Generate and upload both SVG formats
     results = {}
 
     # Square format (512x512)
-    square_svg = generate_svg_content(statement, width: 512, height: 512, padding: 40, header_size: 24, header_spacing: 20)
+    square_svg = generate_svg_content(statement, author_id, width: 512, height: 512, padding: 40, header_size: 24, header_spacing: 20)
     results[:square] = upload_to_cloudinary(square_svg, statement_id, "square", "statements/square")
 
     # Social format (1200x630)
-    social_svg = generate_svg_content(statement, width: 1200, height: 630, padding: 60, header_size: 48, header_spacing: 40)
+    social_svg = generate_svg_content(statement, author_id, width: 1200, height: 630, padding: 60, header_size: 48, header_spacing: 40)
     results[:social] = upload_to_cloudinary(social_svg, statement_id, "social", "statements/social")
 
     # Store public_ids in database
@@ -34,6 +36,26 @@ class GenerateOgImageJob < ApplicationJob
 
   private
 
+  def build_header(statement, author_id)
+    vote_count = statement.get_upvotes.size
+    author_voted = author_id && statement.get_upvotes.find { |vote| vote.voter_id == author_id }.present?
+
+    if author_voted && vote_count == 1
+      "I agree with..."
+    elsif author_voted && vote_count > 1
+      other_count = vote_count - 1
+      formatted_count = number_with_delimiter(other_count)
+      "I and #{formatted_count} other #{other_count == 1 ? 'person' : 'people'} agree with..."
+    elsif vote_count == 1
+      "1 person agrees with..."
+    elsif vote_count > 1
+      formatted_count = number_with_delimiter(vote_count)
+      "#{formatted_count} people agree with..."
+    else
+      "We agree with..."
+    end
+  end
+
   def upload_to_cloudinary(svg_content, statement_id, format_type, folder)
     Cloudinary::Uploader.upload(
       StringIO.new(svg_content),
@@ -45,10 +67,12 @@ class GenerateOgImageJob < ApplicationJob
     )
   end
 
-  def generate_svg_content(statement, width:, height:, padding:, header_size:, header_spacing:)
-    header = "we agree that..."
+  def generate_svg_content(statement, author_id, width:, height:, padding:, header_size:, header_spacing:)
     content = statement.content
     content += "." unless content.end_with?(".", "!", "?")
+
+    # Build header based on vote count and whether author is known
+    header = build_header(statement, author_id)
 
     # Header dimensions
     header_line_height = header_size * 1.2

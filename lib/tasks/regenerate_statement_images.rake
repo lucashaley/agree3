@@ -14,8 +14,8 @@ namespace :statements do
     Statement.find_each.with_index do |statement, index|
       print "\rProcessing #{index + 1}/#{total}..."
 
-      # Enqueue job
-      GenerateOgImageJob.perform_later(statement.id)
+      # Enqueue job with author context
+      GenerateOgImageJob.perform_later(statement.id, statement.author_id)
       regenerated += 1
 
       # Throttle to avoid overwhelming Cloudinary API
