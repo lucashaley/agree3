@@ -70,8 +70,8 @@ class GenerateOgImageJob < ApplicationJob
     # Light mode colors
     colors = {
       background: "#f8f9fa",
-      text: "#111827",
-      header: "#6b7280"
+      text: "#000000",
+      header: "#000000"
     }
 
     # Generate SVG
@@ -82,7 +82,7 @@ class GenerateOgImageJob < ApplicationJob
         <text x="#{padding}" y="#{padding + header_size}"
               font-family="DejaVu Sans, sans-serif"
               font-size="#{header_size}"
-              font-weight="700"
+              font-weight="900"
               fill="#{colors[:header]}"
               text-anchor="left">
           #{header}
@@ -90,7 +90,7 @@ class GenerateOgImageJob < ApplicationJob
         <text x="#{padding}" y="#{padding + header_total_height + content_size}"
               font-family="DejaVu Sans, sans-serif"
               font-size="#{content_size}"
-              font-weight="700"
+              font-weight="900"
               fill="#{colors[:text]}"
               text-anchor="left">
           #{wrap_text(content, available_width, content_size, padding)}
@@ -123,8 +123,8 @@ class GenerateOgImageJob < ApplicationJob
     # Light mode colors
     colors = {
       background: "#f8f9fa",
-      text: "#111827",
-      header: "#6b7280"
+      text: "#000000",
+      header: "#000000"
     }
 
     # Generate SVG
@@ -135,7 +135,7 @@ class GenerateOgImageJob < ApplicationJob
         <text x="#{padding}" y="#{padding + header_size}"
               font-family="DejaVu Sans, sans-serif"
               font-size="#{header_size}"
-              font-weight="700"
+              font-weight="900"
               fill="#{colors[:header]}"
               text-anchor="left">
           #{header}
@@ -143,7 +143,7 @@ class GenerateOgImageJob < ApplicationJob
         <text x="#{padding}" y="#{padding + header_total_height + content_size}"
               font-family="DejaVu Sans, sans-serif"
               font-size="#{content_size}"
-              font-weight="700"
+              font-weight="900"
               fill="#{colors[:text]}"
               text-anchor="left">
           #{wrap_text(content, available_width, content_size, padding)}
