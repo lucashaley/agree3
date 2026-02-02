@@ -297,7 +297,7 @@ class StatementsController < ApplicationController
     if @statement.square_image_public_id.present?
       url = Cloudinary::Utils.cloudinary_url(@statement.square_image_public_id,
                                              fetch_format: :png)
-      redirect_to url, status: :moved_permanently
+      redirect_to url, status: :moved_permanently, allow_other_host: true
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -310,7 +310,7 @@ class StatementsController < ApplicationController
       url = Cloudinary::Utils.cloudinary_url(@statement.square_image_public_id,
                                              effect: "negate",
                                              fetch_format: :png)
-      redirect_to url, status: :moved_permanently
+      redirect_to url, status: :moved_permanently, allow_other_host: true
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -323,7 +323,7 @@ class StatementsController < ApplicationController
       url = Cloudinary::Utils.cloudinary_url(@statement.social_image_public_id,
                                              fetch_format: :jpg,
                                              quality: 95)
-      redirect_to url, status: :moved_permanently
+      redirect_to url, status: :moved_permanently, allow_other_host: true
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -337,7 +337,7 @@ class StatementsController < ApplicationController
                                              effect: "negate",
                                              fetch_format: :jpg,
                                              quality: 95)
-      redirect_to url, status: :moved_permanently
+      redirect_to url, status: :moved_permanently, allow_other_host: true
     else
       render plain: "Image is being generated", status: :accepted
     end
@@ -349,7 +349,7 @@ class StatementsController < ApplicationController
     if @statement.social_image_public_id.present?
       url = Cloudinary::Utils.cloudinary_url(@statement.social_image_public_id,
                                              fetch_format: :png)
-      redirect_to url, status: :moved_permanently
+      redirect_to url, status: :moved_permanently, allow_other_host: true
     else
       render plain: "OG image is being generated, please try again in a moment", status: :accepted
     end
